@@ -2,7 +2,7 @@
 任务名称
 name: 鸣潮·库街区 每日签到
 定时规则
-cron: 30 10 0 * * ?
+cron: 0 3 0 * * ?
 """
 
 import requests
