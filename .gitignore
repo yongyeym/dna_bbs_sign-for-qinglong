@@ -1,0 +1,18 @@
+# Log
+*.log
+
+# IDE使用目录
+.env
+.idea/
+.venv/
+/__pycache__/
+
+# 缩略图缓存
+.DS_Store
+Thumbs.db
+
+# 测试文件、未完成文件
+test.py
+nga-sign.py
+ff14sqmall-sign.py
+/Utility/sqMall/
