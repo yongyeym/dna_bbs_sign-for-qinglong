@@ -22,7 +22,6 @@ def get_acw_tc():
     """
     uuid = str(util.get_uuid(4,False,False))
     hash_part = util.get_sha256(f"{util.get_timestamp()}{uuid}")[:32]  # 截取32位哈希值补全tcw_tc的长度
-    print(f"ACW_TC = {uuid}{hash_part}")
     return f"{uuid}{hash_part}"
 
 # 获取一个随机生成的acw_tc值，在本次运行期间使用，用于给请求头cookie赋值
@@ -40,8 +39,6 @@ def get_kurobbs_userid():
         'queryUserId': USER_ID  # 库街区账号UID
     }
     response = get_response(url, data, 2)
-    print("gamer/role/default：")
-    print(response)
     if response["code"] == 200:
         response_data = response["data"]["defaultRoleList"]  # 获取包含账号所有游戏默认角色的信息数组
         for i in range(len(response_data)):
@@ -73,8 +70,6 @@ def get_kurobbs_taskprocess():
         'userId': USER_ID
     }
     response = get_response(url, data, 2)
-    print("encourage/level/getTaskProcess：")
-    print(response)
     if response["code"] == 200:
         data = response["data"]["dailyTask"]
         for i in range(len(data)):
@@ -113,8 +108,6 @@ def get_kurobbs_new_formlist():
         'topicId': "",  # 话题ID
     }
     response = get_response(url, data, 2)
-    print("forum/list：")
-    print(response)
     if response["code"] == 200:
         data = response["data"]["postList"][0]
         return data["postId"], data["userId"]
@@ -137,8 +130,6 @@ def get_post_detail(postId):
         'showOrderType': "2"  # 未知用途
     }
     response = get_response(url, data, 2)
-    print("forum/getPostDetail：")
-    print(response)
     if response["code"] == 200:
         return False
     elif response["code"] == 220:
@@ -170,8 +161,6 @@ def do_like(postId,toUserId):
         'toUserId': toUserId  # 帖子作者ID
     }
     response = get_response(url, data, 2)
-    print("forum/like：")
-    print(response)
     if response["code"] == 200:
         return False
     elif response["code"] == 220:
@@ -224,8 +213,6 @@ def do_share(postId):
         'postId': postId  # 帖子ID
     }
     response = get_response(url, data, 2)
-    print("encourage/level/shareTask：")
-    print(response)
     if response["code"] == 200:
         return False
     elif response["code"] == 220:
@@ -249,8 +236,6 @@ def do_signin_bbs():
         'geeTestData': ""
     }
     response = get_response(url, data, 2)
-    print("user/signIn：")
-    print(response)
     if response["code"] == 200:
         response_data = response["data"]
         response_award = response_data["gainVoList"]
@@ -288,8 +273,6 @@ def get_signin_game_awards_list(roleId, server_id):
         'userId': USER_ID
     }
     response = get_response(url, data, 1)
-    print("encourage/signIn/initSignInV2：")
-    print(response)
     if response["code"] == 200:
         # 确定今天游戏是否签到，true为签到过，false为没有签到
         if response["data"]["isSigIn"]:
@@ -326,8 +309,6 @@ def do_signin_game(award, roleId, server_id):
         'reqMonth': util.get_format_datetime()["month"]  # 获取当前月份数字，不足2位则前面补0
     }
     response = get_response(url, data, 1)
-    print("encourage/signIn/v2：")
-    print(response)
     if response["code"] == 200:
         message += f"鸣潮游戏签到成功：当月已签到 {response['data']['signinTimeNow']} 天，今天的游戏签到奖励是{award}。"
         return message
