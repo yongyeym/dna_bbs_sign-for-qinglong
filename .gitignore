@@ -14,10 +14,8 @@ Thumbs.db
 # 测试用例
 test.py
 
-# 未完成脚本
-
-
 # 已失效脚本（待修复/无力修复废弃）
 ff14sqmall_sign.py
 /Utility/sqMall/
-kurobbs_only_mingchao_sign.py
+
+# 未完成脚本
