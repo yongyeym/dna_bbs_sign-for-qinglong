@@ -5,6 +5,7 @@ name: NGA社区 每日签到
 cron: 0 3 0 * * ?
 """
 
+import traceback
 import requests
 from Utility.common import common_util as util
 from Utility.common.common_util import get_md5
@@ -102,6 +103,7 @@ if __name__ == "__main__":
             doSign()
         except Exception as e:
             util.send_log(3, f"程序运行报错 - {e}")
+            util.send_log(3, f"{traceback.format_exc()}")
             util.send_notify("【程序报错】NGA社区·签到", f"程序运行报错，请查看日志！\n\n错误信息：{e}")
     else:
         util.send_log(2, f"缺少环境变量，请添加以下环境变量后再使用：{value_check}")

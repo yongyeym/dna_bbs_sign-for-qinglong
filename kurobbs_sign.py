@@ -7,6 +7,7 @@ cron: 0 3 0 * * ?
 
 import time
 import requests
+import traceback
 from Utility.common import common_util as util
 from Utility.common.common_util import SPException
 
@@ -21,7 +22,7 @@ def get_acw_tc():
     前36位为标准UUID4（带横杠 - ），后32位为使用时间戳+前述生成的UUID组合进行SHA256后的值取前32位。
     """
     uuid = str(util.get_uuid(4,False,False))
-    hash_part = util.get_sha256(f"{util.get_timestamp()}{uuid}")[:32]  # 截取32位哈希值补全tcw_tc的长度
+    hash_part = util.get_sha256(f"{util.get_timestamp()}{uuid}")[:32]  # 截取32位哈希值补全tcw_tc的长度，也可以考虑使用MD5
     return f"{uuid}{hash_part}"
 
 # 获取一个随机生成的acw_tc值，在本次运行期间使用，用于给请求头cookie赋值
@@ -506,7 +507,9 @@ if __name__ == "__main__":
         except Exception as e:
             # 其他所有异常
             util.send_log(3, f"程序运行报错 - {e}")
+            util.send_log(3, f"{traceback.format_exc()}")
             util.send_notify("【程序报错】鸣潮·签到", f"程序运行报错，请查看日志！\n\n错误信息：{e}")
+
     else:
         util.send_log(2, f"缺少环境变量配置！需要添加环境变量：{value_check}")
         util.send_notify("【缺少环境变量】鸣潮·签到",f"缺少环境变量，请添加以下环境变量后再使用：{value_check}")

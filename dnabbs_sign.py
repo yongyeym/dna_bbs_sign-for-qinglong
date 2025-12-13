@@ -6,6 +6,7 @@ cron: 0 3 0 * * ?
 """
 
 import time
+import traceback
 import requests
 from Utility.common import common_util as util
 from Utility.common.common_util import SPException
@@ -483,4 +484,5 @@ if __name__ == "__main__":
         except Exception as e:
             # 其他所有异常
             util.send_log(3, f"程序运行报错 - {e}")
+            util.send_log(3, f"{traceback.format_exc()}")
             util.send_notify("【程序报错】二重螺旋·签到", f"程序运行报错，请查看日志！\n\n错误信息：{e}")

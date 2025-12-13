@@ -5,6 +5,7 @@ name: 鸣潮·游戏 每日签到
 cron: 30 10 0 * * ?
 """
 
+import traceback
 import requests
 import json
 from Utility.common import common_util as util
@@ -79,6 +80,7 @@ if __name__ == "__main__":
             doSign()
         except Exception as e:
             util.send_log(3, f"程序运行报错 - {e}")
+            util.send_log(3, f"{traceback.format_exc()}")
             util.send_notify("【程序报错】鸣潮·签到", f"程序运行报错，请查看日志！\n\n错误信息：{e}")
     else:
         util.send_log(2, f"缺少环境变量配置！需要添加环境变量：{value_check}")
