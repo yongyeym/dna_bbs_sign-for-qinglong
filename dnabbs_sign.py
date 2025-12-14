@@ -18,10 +18,11 @@ UUID = util.get_uuid(4, True, False)
 # 从环境变量获取Cookie
 ACCOUNT = util.get_os_env("dnabbs")[0]
 
-def get_dnabbs_userid():
+def get_dnabbs_userid() -> str:
     """
     API：user/mineV2
-    获取皎皎角社区账号的UID，用于获取社区每日任务完成情况：
+    获取皎皎角社区账号的UID，用于获取社区每日任务完成情况
+    :return: 皎皎角社区账号的UID
     """
     url = "https://dnabbs-api.yingxiong.com/user/mineV2"
     data = {
@@ -37,25 +38,12 @@ def get_dnabbs_userid():
     else:
         raise SPException("失败",f"请求出现异常或被拒绝！Code {response['code']} - {response['msg']}")
 
-def get_dnabbs_taskprocess(userId):
+def get_dnabbs_taskprocess(userId: str) -> tuple[int, ...]:
     """
     API：encourage/level/getTaskProcess
     获取皎皎角社区用户的社区每日任何和一次性任务完成情况：
-    bbs_sign 社区签到情况
-    game_sign 游戏签到情况
-    like 每日点赞5次帖子
-    read 每日阅读3次帖子
-    share 每日分享1次帖子
-    comment 每日回复他人帖子5次
-
-    返回JSON：
-    completeTimes：当前完成的次数
-    times：需要完成的次数
-    gainExp：皎皎角社区用户经验
-    gainGold：皎皎角社区金币
-    process：当前进度，0-1的小数形式表示百分比进度
-    remark：任务名称
-    skipType：对于每日任务，这个值恒为0
+    :param userId: 皎皎角社区账号的UID
+    :return: 返回每日任务还差几次完成，like 每日点赞5次帖子、read 每日阅读3次帖子、share 每日分享1次帖子、comment 每日回复他人帖子5次、bbs_sign 社区签到情况
     """
     bbs_sign = like = read = share = comment = 0
     url = "https://dnabbs-api.yingxiong.com/encourage/level/getTaskProcess"
@@ -85,13 +73,14 @@ def get_dnabbs_taskprocess(userId):
     else:
         raise SPException("失败",f"请求出现异常或被拒绝！Code {response['code']} - {response['msg']}")
 
-def get_dnabbs_new_formlist():
+def get_dnabbs_new_formlist() -> tuple[str, str]:
     """
     API：forum/list
     获取皎皎角社区用户水区分版下最新发布的帖子列表
     用于获取帖子ID进行点赞和浏览的每日任务
     获取最新发布的用户水区是确保每天获取的第一页帖子列表一定是新帖子，防止对已经浏览/点赞过的帖子再次处理导致任务进度不增加
     但目前其任务进度使用重复浏览、点赞取消后再点赞的方式，也会计入完成次数
+    :return: 返回帖子ID和帖子作者ID
     """
     url = "https://dnabbs-api.yingxiong.com/forum/list"
     data = {
@@ -114,10 +103,12 @@ def get_dnabbs_new_formlist():
     else:
         raise SPException("失败", f"请求出现异常或被拒绝！Code {response['code']} - {response['msg']}")
 
-def get_post_detail(postId):
+def get_post_detail(postId: str) -> bool:
     """
     API：forum/getPostDetail
     浏览帖子详情的API，用于完成每日浏览任务
+    :param postId: 帖子ID
+    :return: 返回布尔值，True为帖子被删除需要重新执行一遍，False为正常处理
     """
     url = "https://dnabbs-api.yingxiong.com/forum/getPostDetail"
     data = {
@@ -137,12 +128,15 @@ def get_post_detail(postId):
     else:
         raise SPException("失败", f"请求出现异常或被拒绝！Code {response['code']} - {response['msg']}")
 
-def do_like(postId,toUserId):
+def do_like(postId: str, toUserId: str) -> bool:
     """
     API：forum/like
     进行点赞的API，用于完成每日点赞任务
     为了防止传入的帖子本身是已经点过赞的，导致第一次点赞无效
     因此第一次点赞前会先调用取消点赞API确保帖子是没有点赞的状态
+    :param postId: 帖子ID
+    :param toUserId: 帖子作者ID
+    :return: 返回布尔值，True为帖子被删除需要重新执行一遍，False为正常处理
     """
     url = "https://dnabbs-api.yingxiong.com/forum/like"
     data = {
@@ -168,11 +162,14 @@ def do_like(postId,toUserId):
     else:
         raise SPException("失败", f"请求出现异常或被拒绝！Code {response['code']} - {response['msg']}")
 
-def do_unlike(postId,toUserId):
+def do_unlike(postId: str, toUserId: str) -> bool:
     """
     API：forum/like
     进行取消点赞的API
     与点赞API相同，唯一区别是传入的operateType参数值从1改为2
+    :param postId: 帖子ID
+    :param toUserId: 帖子作者ID
+    :return: 返回布尔值，True为帖子被删除需要重新执行一遍，False为正常处理
     """
     url = "https://dnabbs-api.yingxiong.com/forum/like"
     data = {
@@ -198,10 +195,11 @@ def do_unlike(postId,toUserId):
     else:
         raise SPException("失败", f"请求出现异常或被拒绝！Code {response['code']} - {response['msg']}")
 
-def do_share():
+def do_share() -> bool:
     """
     API：encourage/level/shareTask
     进行分享任务进度提交的API
+    :return: 返回布尔值，True为帖子被删除需要重新执行一遍，False为正常处理
     """
     url = "https://dnabbs-api.yingxiong.com/encourage/level/shareTask"
     data = {
@@ -219,17 +217,11 @@ def do_share():
     else:
         raise SPException("失败", f"请求出现异常或被拒绝！Code {response['code']} - {response['msg']}")
 
-def do_signin_bbs():
+def do_signin_bbs() -> str:
     """
     API：user/signIn
     进行皎皎角社区签到的API
-
-    返回JSON：
-    continuitySignInDay：当前连续签到天数
-    totalSignInDay：累计签到天数
-    hasNewDraw：未知用途
-    hasNewProduct：未知用途
-    data-gainVoList：本次签到的奖励内容和数量，gainTyp 1为皎皎积分，2为社区经验
+    :return: message: 社区签到执行相关的文本日志
     """
     message = ""
     url = "https://dnabbs-api.yingxiong.com/user/signIn"
@@ -264,10 +256,14 @@ def do_signin_bbs():
     else:
         raise SPException("失败", f"请求出现异常或被拒绝！Code {response['code']} - {response['msg']}")
 
-def get_signin_game_awards_list():
+def get_signin_game_awards_list() -> tuple[int, str, str, str]:
     """
     API：encourage/signin/show
     返回当前月份游戏签到的奖励详情列表，与当前月份用户已经签到天数、可使用补签次数等信息
+    :return game_sign: 今天是否已经签到，0为签到过，1为未签到
+    :return periodId: 当前月份的ID序号，用于执行签到时传递参数；在返回中“dayAward”项内的每一组数据，都有一个“periodId”项
+    :return dayAwardId: 今天的签到奖励对应的奖励ID，用于执行签到时传递参数；在返回中“dayAward”项内的每一组数据，都有一个“id”项
+    :return award: 今天的游戏签到奖励
     """
     url = "https://dnabbs-api.yingxiong.com/encourage/signin/show"
     data = {
@@ -297,10 +293,14 @@ def get_signin_game_awards_list():
     else:
         raise SPException("失败", f"请求出现异常或被拒绝！Code {response['code']} - {response['msg']}")
 
-def do_signin_game(periodId, dayAwardId, award):
+def do_signin_game(periodId: str, dayAwardId: str, award: str) -> str:
     """
     API：encourage/signin/signin
     进行二重螺旋游戏签到的API，需提前在皎皎角APP的签到页面绑定游戏角色
+    :param periodId: 当前月份的ID序号，用于执行签到时传递参数
+    :param dayAwardId: 今天的签到奖励对应的奖励ID，用于执行签到时传递参数
+    :param award: 今天的游戏签到奖励
+    :return message: 游戏签到执行相关的文本日志
     """
     message = ""
     url = "https://dnabbs-api.yingxiong.com/encourage/signin/signin"
@@ -324,9 +324,13 @@ def do_signin_game(periodId, dayAwardId, award):
     else:
         raise SPException("失败", f"请求出现异常或被拒绝！Code {response['code']} - {response['msg']}")
 
-def get_response(url, data, content_length):
+def get_response(url: str, data: dict[str, str], content_length: str) -> any:
     """
     返回处理为json的response
+    :param url: 请求的url
+    :param data: 请求的data
+    :param content_length: 请求的content_length
+    :return: 返回处理为json的response
     """
     headers = {
         'User-Agent': "DoubleHelix/2 CFNetwork/3860.100.1 Darwin/25.0.0",
@@ -357,7 +361,7 @@ if __name__ == "__main__":
     由于以上种种限制，导致无法直接对官方水贴回复5次来完成任务，随机水贴回复其他玩家帖子可能出现不可预料的情况，因此放弃自动处理此任务
     """
     util.send_log(0, "二重螺旋·皎皎角 每日签到 - 开始执行")
-    notify_content = ""
+    notify_content = ""  # 储存用于推送通知正文的消息内容
     if ACCOUNT is None:
         util.send_log(2, "缺少环境变量，请添加以下环境变量后再使用：dnabbs")
         util.send_notify("【缺少环境变量】二重螺旋·签到", "缺少环境变量，请添加以下环境变量后再使用：dnabbs（皎皎角账号Cookie）")

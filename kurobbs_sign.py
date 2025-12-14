@@ -16,10 +16,11 @@ UUID = util.get_uuid(4, True, True)
 # 从环境变量获取Token和库街区账号UID
 ACCOUNT, USER_ID = util.get_os_env("kurobbs", "kuro_uid")
 
-def get_acw_tc():
+def get_acw_tc() -> str:
     """
     模仿抓包获取的值的格式，随机生成一个68位的acw_tc值。
     前36位为标准UUID4（带横杠 - ），后32位为使用时间戳+前述生成的UUID组合进行SHA256后的值取前32位。
+    :return 返回一个随机生成的68位acw_tc字符串
     """
     uuid = str(util.get_uuid(4,False,False))
     hash_part = util.get_sha256(f"{util.get_timestamp()}{uuid}")[:32]  # 截取32位哈希值补全tcw_tc的长度，也可以考虑使用MD5
@@ -29,11 +30,12 @@ def get_acw_tc():
 # 尚不清楚这个值的产生方式，使用AI分析可能的组成方式而写出的生成代码，验证生成值可以使用，但无法确保一定可用
 ACW_TC = get_acw_tc()
 
-def get_kurobbs_userid():
+def get_kurobbs_userid() -> tuple[str, str]:
     """
     API：gamer/role/default
     获取库街区社区账号默认绑定角色的UID、游戏所在服务器serverID，用于执行签到等操作：
     也有API user/mineV2，但只能查询库街区账号信息，无游戏角色信息
+    :return 返回游戏角色roleId、游戏服务器serverID
     """
     url = "https://api.kurobbs.com/gamer/role/default"
     data = {
@@ -54,15 +56,11 @@ def get_kurobbs_userid():
     else:
         raise SPException("失败",f"请求出现异常或被拒绝！Code {response['code']} - {response['msg']}")
 
-def get_kurobbs_taskprocess():
+def get_kurobbs_taskprocess() -> tuple[int, ...]:
     """
     API：encourage/level/getTaskProcess
     获取皎皎角社区用户的社区每日任何和一次性任务完成情况：
-    bbs_sign 社区签到情况
-    game_sign 游戏签到情况
-    like 每日点赞5次帖子
-    read 每日阅读3次帖子
-    share 每日分享1次帖子
+    :return 返回每日任务还差几次完成，like 每日点赞5次帖子、read 每日阅读3次帖子、share 每日分享1次帖子、bbs_sign 社区签到情况
     """
     bbs_sign = like = read = share = 0
     url = "https://api.kurobbs.com/encourage/level/getTaskProcess"
@@ -90,13 +88,14 @@ def get_kurobbs_taskprocess():
     else:
         raise SPException("失败",f"请求出现异常或被拒绝！Code {response['code']} - {response['msg']}")
 
-def get_kurobbs_new_formlist():
+def get_kurobbs_new_formlist() -> tuple[str, str]:
     """
     API：forum/list
     获取库街区鸣潮-今州茶馆分版下最新发布的帖子列表
     用于获取帖子ID进行点赞和浏览的每日任务
     获取最新发布的用户水区是确保每天获取的第一页帖子列表一定是新帖子，防止对已经浏览/点赞过的帖子再次处理导致任务进度不增加
     但目前其任务进度使用重复浏览、点赞取消后再点赞的方式，也会计入完成次数
+    :return 返回帖子ID postId 和作者ID userId
     """
     url = "https://api.kurobbs.com/forum/list"
     data = {
@@ -119,10 +118,12 @@ def get_kurobbs_new_formlist():
     else:
         raise SPException("失败", f"请求出现异常或被拒绝！Code {response['code']} - {response['msg']}")
 
-def get_post_detail(postId):
+def get_post_detail(postId: str) -> bool:
     """
     API：forum/getPostDetail
     浏览帖子详情的API，用于完成每日浏览任务
+    :param postId: 帖子ID
+    :return 返回布尔值，True为帖子被删除需要重新执行一遍，False为正常处理
     """
     url = "https://api.kurobbs.com/forum/getPostDetail"
     data = {
@@ -142,12 +143,15 @@ def get_post_detail(postId):
     else:
         raise SPException("失败", f"请求出现异常或被拒绝！Code {response['code']} - {response['msg']}")
 
-def do_like(postId,toUserId):
+def do_like(postId: str,toUserId: str) -> bool:
     """
     API：forum/like
     进行点赞的API，用于完成每日点赞任务
     为了防止传入的帖子本身是已经点过赞的，导致第一次点赞无效
     因此第一次点赞前会先调用取消点赞API确保帖子是没有点赞的状态
+    :param postId: 帖子ID
+    :param toUserId: 帖子作者ID
+    :return 返回布尔值，True为帖子被删除需要重新执行一遍，False为正常处理
     """
     url = "https://api.kurobbs.com/forum/like"
     data = {
@@ -173,11 +177,14 @@ def do_like(postId,toUserId):
     else:
         raise SPException("失败", f"请求出现异常或被拒绝！Code {response['code']} - {response['msg']}")
 
-def do_unlike(postId,toUserId):
+def do_unlike(postId: str,toUserId: str) -> bool:
     """
     API：forum/like
     进行取消点赞的API
     与点赞API相同，唯一区别是传入的operateType参数值从1改为2
+    :param postId: 帖子ID
+    :param toUserId: 帖子作者ID
+    :return 返回布尔值，True为帖子被删除需要重新执行一遍，False为正常处理
     """
     url = "https://api.kurobbs.com/forum/like"
     data = {
@@ -203,10 +210,12 @@ def do_unlike(postId,toUserId):
     else:
         raise SPException("失败", f"请求出现异常或被拒绝！Code {response['code']} - {response['msg']}")
 
-def do_share(postId):
+def do_share(postId: str) -> bool:
     """
     API：encourage/level/shareTask
     进行分享任务进度提交的API
+    :param postId: 帖子ID
+    :return 返回布尔值，True为帖子被删除需要重新执行一遍，False为正常处理
     """
     url = "https://api.kurobbs.com/encourage/level/shareTask"
     data = {
@@ -225,10 +234,11 @@ def do_share(postId):
     else:
         raise SPException("失败", f"请求出现异常或被拒绝！Code {response['code']} - {response['msg']}")
 
-def do_signin_bbs():
+def do_signin_bbs() -> str:
     """
     API：user/signIn
     进行库街区签到的API
+    :return message: 社区签到执行相关的文本日志
     """
     message = ""
     url = "https://api.kurobbs.com/user/signIn"
@@ -261,10 +271,15 @@ def do_signin_bbs():
     else:
         raise SPException("失败", f"请求出现异常或被拒绝！Code {response['code']} - {response['msg']}")
 
-def get_signin_game_awards_list(roleId, server_id):
+def get_signin_game_awards_list(roleId: str, server_id: str) -> tuple[int, str, str]:
     """
     API：encourage/signIn/initSignInV2
     返回当前月份游戏签到的奖励详情列表，与当前月份用户已经签到天数、可使用补签次数等信息
+    :param roleId: 游戏角色UID
+    :param server_id: 游戏服务器ID
+    :return game_sign: 今天是否已经签到，0为签到过，1为未签到
+    :return award: 今天的游戏签到奖励
+    :return signin_time: 当月签到天数（包含今天）
     """
     url = "https://api.kurobbs.com/encourage/signIn/initSignInV2"
     data = {
@@ -287,7 +302,7 @@ def get_signin_game_awards_list(roleId, server_id):
             if award_list[i]["serialNum"] - 1 == signin_time:  # 编号从0开始，因此需要减1
                 award = f"「{award_list[i]['goodsName']}」*{award_list[i]['goodsNum']}"
                 break  # 找到当天的奖励了，直接中断for循环
-        return game_sign, award
+        return game_sign, award, signin_time
     elif response["code"] == 220:
         raise SPException("Cookie失效", "Cookie失效，请更新环境变量kurobbs的值！")
     elif response["code"] == 500:
@@ -295,10 +310,15 @@ def get_signin_game_awards_list(roleId, server_id):
     else:
         raise SPException("失败", f"请求出现异常或被拒绝！Code {response['code']} - {response['msg']}")
 
-def do_signin_game(award, roleId, server_id):
+def do_signin_game(award: str, signin_time: int, roleId: str, server_id: str) -> str:
     """
     API：encourage/signIn/v2
     进行鸣潮游戏签到的API
+    :param award: 今天的游戏签到奖励
+    :param signin_time: 当月签到天数（包含今天）
+    :param roleId: 游戏角色UID
+    :param server_id: 游戏服务器ID
+    :return message: 游戏签到执行相关的文本日志
     """
     message = ""
     url = "https://api.kurobbs.com/encourage/signIn/v2"
@@ -311,7 +331,7 @@ def do_signin_game(award, roleId, server_id):
     }
     response = get_response(url, data, 1)
     if response["code"] == 200:
-        message += f"鸣潮游戏签到成功：当月已签到【还在验证这个参数】天，今天的游戏签到奖励是{award}。"
+        message += f"鸣潮游戏签到成功：当月已签到 {signin_time} 天，今天的游戏签到奖励是{award}。"
         return message
     elif response["code"] == 220:
         raise SPException("Cookie失效", "Cookie失效，请更新环境变量kurobbs的值！")
@@ -321,10 +341,13 @@ def do_signin_game(award, roleId, server_id):
     else:
         raise SPException("失败", f"请求出现异常或被拒绝！Code {response['code']} - {response['msg']}")
 
-def get_response(url, data, headers_type):
+def get_response(url: str, data: dict[str, str], headers_type: int) -> any:
     """
     返回处理为json的response
-    存在两种headers，第一种用于部分执行操作的API（如签到），第二种用于大部分获取数据的API
+    :param url: 请求的url
+    :param data: 请求的data
+    :param headers_type:存在两种headers，第一种用于部分执行操作的API（如签到），第二种用于大部分获取数据的API
+    :return 返回json化的response
     """
     headers1 = {
         'User-Agent': "Mozilla/5.0 (Linux; Android 12; 23116PN5BC Build/V417IR; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/101.0.4951.61 Safari/537.36 Kuro/2.9.0 KuroGameBox/2.9.0",
@@ -378,8 +401,8 @@ def get_response(url, data, headers_type):
 
 if __name__ == "__main__":
     util.send_log(0, "鸣潮·库街区 每日签到 - 开始执行")
-    notify_content = ""
-    value_check = ""
+    notify_content = ""  # 储存用于推送通知正文的消息内容
+    value_check = ""  # 存储环境变量为空的变量名用于推送通知正文内容
     if ACCOUNT is None:
         value_check += "【kurobbs】"
     if USER_ID is None:
@@ -403,7 +426,7 @@ if __name__ == "__main__":
                 read, like, share, bbs_sign = get_kurobbs_taskprocess()
                 time.sleep(2)
                 # 直接使用获取本月游戏签到奖励列表API，其中也会有今天是否签到的data
-                game_sign, award = get_signin_game_awards_list(roleId, server_id)
+                game_sign, award, signin_time = get_signin_game_awards_list(roleId, server_id)
                 util.send_log(0,  f"今日任务完成情况：点赞{' 已完成' if like == 0 else f'还需 {like} 次'}、浏览{' 已完成' if read == 0 else f'还需 {read} 次'}、分享{' 已完成' if share == 0 else f'还需 {share} 次'}、社区签到 {'已完成' if bbs_sign == 0 else '未完成'}、鸣潮游戏签到 {'已完成' if game_sign == 0 else '未完成'}。")
                 notify_content += f"今日任务完成情况：点赞{' 已完成' if like == 0 else f'还需 {like} 次'}、浏览{' 已完成' if read == 0 else f'还需 {read} 次'}、分享{' 已完成' if share == 0 else f'还需 {share} 次'}、社区签到 {'已完成' if bbs_sign == 0 else '未完成'}、鸣潮游戏签到 {'已完成' if game_sign == 0 else '未完成'}。\n\n"
                 time.sleep(2)
@@ -486,7 +509,7 @@ if __name__ == "__main__":
                 notify_content += "社区签到已完成，不需要进行操作；\n\n"
             # 如果需要游戏签到，则执行签到
             if game_sign == 1:
-                message_game_sign = do_signin_game(award, roleId, server_id)
+                message_game_sign = do_signin_game(award, signin_time, roleId, server_id)
                 util.send_log(0, message_game_sign)
                 notify_content += f"{message_game_sign}\n\n"
                 time.sleep(5)

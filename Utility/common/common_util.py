@@ -8,7 +8,7 @@ from typing import Dict, List, Union, Optional
 
 from Utility import notify
 
-def get_os_env(*args: str) -> tuple:
+def get_os_env(*args: str) -> tuple[str, ...]:
     """
     获取对应的环境变量值，并去除前后空格，可一次获取多个环境变量
     :arg *args：环境变量的Key，可以是多个
@@ -76,7 +76,7 @@ def get_format_datetime(input_time: Optional[Union[datetime, str]] = None) -> Di
     now_day = "{:02d}".format(input_time.day)  # 处理为 当前日期 格式，且不足2位时前面补0
     return {"date": date, "time": time, "datetime": datetime_all, "weekday": now_weekday, "complete_time": datetime_all + " " + now_weekday, "year": now_year, "month": now_month, "day": now_day}  #返回包含所有格式的字典
 
-def get_format_process(process_num):
+def get_format_process(process_num) -> str:
     """
     对小数表示的百分比数据进行格式化处理，处理为保留小数点后两位的百分比显示结果
     """
@@ -172,9 +172,9 @@ def send_log(log_level: int, content: str):
     :param content：详细日志内容
     """
     logging.basicConfig(
-        level=logging.INFO,  # 设置日志级别
-        format='%(asctime)s | %(levelname)s | %(message)s',
-        datefmt='%Y年%m月%d日 %H:%M:%S',
+        level=logging.INFO,  # 设置日志输出级别
+        format='%(asctime)s | %(levelname)s | %(message)s',  # 设置日志输出内容的格式化（日期时间 | 级别 | 信息）
+        datefmt='%Y年%m月%d日 %H:%M:%S',  # 设置日志的时间日期显示格式
         encoding = "utf-8"
     )
     if log_level == 0:

@@ -20,6 +20,9 @@ NGA_USER_INFO_CHECK = get_md5(NGA_USER_INFO)
 WEBKIT_FORM_BOUNDARY = util.get_radom_string()
 
 def doSign():
+    """
+    NGA社区 每日签到，主要执行部分
+    """
     url = "https://ngabbs.com/nuke.php"
     cookie = (f"ngacn0comInfoCheckTime={util.get_timestamp(None, "s")}; "
               f"ngacn0comUserInfo={NGA_USER_INFO}; "
@@ -91,7 +94,7 @@ def doSign():
 
 if __name__ == "__main__":
     util.send_log(0, "NGA社区 每日签到 - 开始执行")
-    value_check = ""
+    value_check = ""  # 存储环境变量为空的变量名用于推送通知正文内容
     if NGA_COOKIE is None:
         value_check += "【nga_cookie】"
     elif NGA_UID is None:
