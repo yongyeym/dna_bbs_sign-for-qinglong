@@ -290,7 +290,8 @@ def get_signin_game_awards_list(roleId: str, server_id: str) -> tuple[int, str, 
     }
     response = get_response(url, data, 1)
     if response["code"] == 200:
-        # 确定今天游戏是否签到，true为签到过，false为没有签到
+        award = "「未知奖励」"
+        # 确定今天游戏是否签到，response["data"]["isSigIn"]的值true为签到过，false为没有签到
         if response["data"]["isSigIn"]:
             game_sign = 0
             signin_time = response["data"]["sigInNum"]  # 获取当月签到天数，今天已经签过到了，因此直接以此签到天数获取今天签到奖励内容
@@ -299,9 +300,19 @@ def get_signin_game_awards_list(roleId: str, server_id: str) -> tuple[int, str, 
             signin_time = response["data"]["sigInNum"] + 1  # 获取当月签到天数，今天未签到，因此需要+1天，获取今天签到后的天数，以此来获取对应的dayAwardId和签到奖励内容
         award_list = response["data"]["signInGoodsConfigs"]  # 当月奖励详情列表
         for i in range(len(award_list)):
-            if award_list[i]["serialNum"] - 1 == signin_time:  # 编号从0开始，因此需要减1
+            if award_list[i]["serialNum"] == signin_time - 1:  # 由于serialNum是从0开始算，签到天数从1开始算，因此需要-1
                 award = f"「{award_list[i]['goodsName']}」*{award_list[i]['goodsNum']}"
                 break  # 找到当天的奖励了，直接中断for循环
+        if "loopSignName" in response["data"]:
+            event_award_name = response["data"]["loopSignName"]
+            event_signin_time = response["data"]["loopSignNum"]
+            event_award_list = response["data"]["signLoopGoodsList"]
+            if not response["data"]["isSigIn"]:
+                event_signin_time = event_signin_time + 1  # 今天未签到，因此需要+1天，
+            for i in range(len(event_award_list)):
+                if event_award_list[i]["serialNum"] == event_signin_time - 1:  # 由于serialNum是从0开始算，签到天数从1开始算，因此需要-1
+                    award = award + f"、限时活动「{event_award_name}」的奖励是「{event_award_list[i]['goodsName']}」*{event_award_list[i]['goodsNum']}"
+                    break  # 找到当天的奖励了，直接中断for循环
         return game_sign, award, signin_time
     elif response["code"] == 220:
         raise SPException("Cookie失效", "Cookie失效，请更新环境变量kurobbs的值！")
@@ -391,13 +402,23 @@ def get_response(url: str, data: dict[str, str], headers_type: int) -> any:
         'token': ACCOUNT,
         'Cookie': f"user_token={ACCOUNT}; acw_tc={ACW_TC}"
     }
-    if headers_type == 1:
-        response = requests.post(url, data=data, headers=headers1).json()
-    elif headers_type == 2:
-        response = requests.post(url, data=data, headers=headers2).json()
-    else:
-        response = requests.post(url, data=data, headers=headers2).json()
-    return response
+    last_exception = None
+    for i in range(3):
+        try:
+            if headers_type == 1:
+                response = requests.post(url, data=data, headers=headers1, timeout=10)
+            elif headers_type == 2:
+                response = requests.post(url, data=data, headers=headers2, timeout=10)
+            else:
+                response = requests.post(url, data=data, headers=headers2, timeout=10)  # 默认使用第二种headers
+            response.raise_for_status()  # 如果响应状态码不是200，主动抛出异常进行重试访问
+            return response.json()
+        except requests.RequestException as e:
+            last_exception = e
+            util.send_log(1, f"URL访问失败（第{i + 1}次），5秒后重试……")
+            if i < 2:  # 失败3次以内时，等待5秒后重试请求
+                time.sleep(5)
+    raise last_exception  # 3次都失败时抛出最后一次失败时的异常，在主程序部分捕获，用于返回API访问失败导致程序运行失败的提示
 
 if __name__ == "__main__":
     util.send_log(0, "鸣潮·库街区 每日签到 - 开始执行")
@@ -427,8 +448,8 @@ if __name__ == "__main__":
                 time.sleep(2)
                 # 直接使用获取本月游戏签到奖励列表API，其中也会有今天是否签到的data
                 game_sign, award, signin_time = get_signin_game_awards_list(roleId, server_id)
-                util.send_log(0,  f"今日任务完成情况：点赞{' 已完成' if like == 0 else f'还需 {like} 次'}、浏览{' 已完成' if read == 0 else f'还需 {read} 次'}、分享{' 已完成' if share == 0 else f'还需 {share} 次'}、社区签到 {'已完成' if bbs_sign == 0 else '未完成'}、鸣潮游戏签到 {'已完成' if game_sign == 0 else '未完成'}。")
-                notify_content += f"今日任务完成情况：点赞{' 已完成' if like == 0 else f'还需 {like} 次'}、浏览{' 已完成' if read == 0 else f'还需 {read} 次'}、分享{' 已完成' if share == 0 else f'还需 {share} 次'}、社区签到 {'已完成' if bbs_sign == 0 else '未完成'}、鸣潮游戏签到 {'已完成' if game_sign == 0 else '未完成'}。\n\n"
+                util.send_log(0,  f"今日任务完成情况：点赞{' 已完成' if like == 0 else f'还需 {like} 次'}、浏览{' 已完成' if read == 0 else f'还需 {read} 次'}、分享{' 已完成' if share == 0 else f'还需 {share} 次'}、「库街区」签到 {'已完成' if bbs_sign == 0 else '未完成'}、「鸣潮」签到 {'已完成' if game_sign == 0 else '未完成'}。")
+                notify_content += f"今日任务完成情况：点赞{' 已完成' if like == 0 else f'还需 {like} 次'}、浏览{' 已完成' if read == 0 else f'还需 {read} 次'}、分享{' 已完成' if share == 0 else f'还需 {share} 次'}、「库街区」签到 {'已完成' if bbs_sign == 0 else '未完成'}、「鸣潮」签到 {'已完成' if game_sign == 0 else '未完成'}。\n\n"
                 time.sleep(2)
                 # 如果需要浏览/点赞/分享，则获取帖子列表，返回1组帖子的id和发帖人id
                 if read > 0 or like > 0 or share > 0:
