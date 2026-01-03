@@ -24,22 +24,62 @@ def doSign():
     NGA社区 每日签到，主要执行部分
     """
     url = "https://ngabbs.com/nuke.php"
+    try:
+        response_data = get_response(url)
+        if "data" in response_data:
+            if "签到成功" in response_data["data"][0]:
+                sum = response_data["data"][1]["sum"]
+                continued = response_data["data"][1]["continued"]
+                util.send_log(0, f"NGA社区 今日签到成功。当前连续签到 {continued} 天，累计签到 {sum} 天。")
+                util.send_notify("NGA社区·签到：已完成",
+                                 f"NGA社区 今日签到成功。\n\n当前连续签到 {continued} 天，累计签到 {sum} 天。")
+            else:
+                util.send_log(1, f"出现了未知错误,错误信息：{response_data['data'][0]}")
+                util.send_notify("【失败】NGA社区·签到",
+                                 f"出现了未知错误，请查看日志！\n\n错误信息：{response_data['data'][0]}")
+        elif "error" in response_data:
+            if "你今天已经签到了" in response_data["error"][0]:
+                util.send_log(0, "今天已经签到过，无需签到。")
+                util.send_notify("NGA社区·签到：已签到", "今天已经签到过，无需签到。")
+            elif "你必须先登录论坛" in response_data["error"][0]:
+                util.send_log(2, "NGA账号Cookie已过期，无法签到。请更新环境变量nga_cookie的值！")
+                util.send_notify("【Cookie过期】NGA社区·签到",
+                                 "NGA账号Cookie已过期，无法签到。需要更新环境变量nga_cookie的值！")
+            elif "CLIENT ERROR" in response_data["error"][0]:
+                util.send_log(2,
+                              "NGA客户端校验码已过期/不适配/非IOS端抓包的校验码，无法通过NGA服务器验证。请更新环境变量nga_client_checksum的值！")
+                util.send_notify("【Cookie过期】NGA社区·签到",
+                                 "NGA客户端校验码已过期/不适配/非IOS端抓包的校验码，无法NGA服务器验证。需要更新环境变量nga_client_checksum的值！")
+            else:
+                util.send_log(1, f"出现了未知错误,错误信息：{response_data['error']}")
+                util.send_notify("【失败】NGA社区·签到",
+                                 f"出现了未知错误，请查看日志！\n\n错误信息：{response_data['error']}")
+    except requests.RequestException as e:
+        util.send_log(3, f"API请求失败 - {e}")
+        util.send_notify("【失败】NGA社区·签到", f"API请求失败，请查看日志！\n\n错误信息：{e}")
+
+def get_response(url) -> any:
+    """
+    返回处理为json的response
+    :return: 返回处理为json的response
+    """
     cookie = (f"ngacn0comInfoCheckTime={util.get_timestamp(None, 's')}; "
               f"ngacn0comUserInfo={NGA_USER_INFO}; "
               f"ngacn0comUserInfoCheck={NGA_USER_INFO_CHECK}; "
               f"bbsmisccookies=%7B%7D; "
               f"access_token={NGA_COOKIE}; "
               f"access_uid={NGA_UID}")
-    data = (f"------WebKitFormBoundary{WEBKIT_FORM_BOUNDARY}\nContent-Disposition: form-data; name='__lib'\n\ncheck_in\n"
-            f"------WebKitFormBoundary{WEBKIT_FORM_BOUNDARY}\nContent-Disposition: form-data; name='__output'\n\n11\n"
-            f"------WebKitFormBoundary{WEBKIT_FORM_BOUNDARY}\nContent-Disposition: form-data; name='app_id'\n\n1100\n"
-            f"------WebKitFormBoundary{WEBKIT_FORM_BOUNDARY}\nContent-Disposition: form-data; name='device'\n\n{UUID_SHA256}\n"
-            f"------WebKitFormBoundary{WEBKIT_FORM_BOUNDARY}\nContent-Disposition: form-data; name='__act'\n\ncheck_in\n"
-            f"------WebKitFormBoundary{WEBKIT_FORM_BOUNDARY}\nContent-Disposition: form-data; name='access_uid'\n\n{NGA_UID}\n"
-            f"------WebKitFormBoundary{WEBKIT_FORM_BOUNDARY}\nContent-Disposition: form-data; name='access_token'\n\n{NGA_COOKIE}\n"
-            f"------WebKitFormBoundary{WEBKIT_FORM_BOUNDARY}\nContent-Disposition: form-data; name='__ngaClientChecksum'\n\n{NGA_CLIENT_CHECKSUM}\n"
-            f"------WebKitFormBoundary{WEBKIT_FORM_BOUNDARY}\nContent-Disposition: form-data; name='__inchst'\n\nUTF-8\n"
-            f"------WebKitFormBoundary{WEBKIT_FORM_BOUNDARY}--\n")
+    data = (
+        f"------WebKitFormBoundary{WEBKIT_FORM_BOUNDARY}\nContent-Disposition: form-data; name='__lib'\n\ncheck_in\n"
+        f"------WebKitFormBoundary{WEBKIT_FORM_BOUNDARY}\nContent-Disposition: form-data; name='__output'\n\n11\n"
+        f"------WebKitFormBoundary{WEBKIT_FORM_BOUNDARY}\nContent-Disposition: form-data; name='app_id'\n\n1100\n"
+        f"------WebKitFormBoundary{WEBKIT_FORM_BOUNDARY}\nContent-Disposition: form-data; name='device'\n\n{UUID_SHA256}\n"
+        f"------WebKitFormBoundary{WEBKIT_FORM_BOUNDARY}\nContent-Disposition: form-data; name='__act'\n\ncheck_in\n"
+        f"------WebKitFormBoundary{WEBKIT_FORM_BOUNDARY}\nContent-Disposition: form-data; name='access_uid'\n\n{NGA_UID}\n"
+        f"------WebKitFormBoundary{WEBKIT_FORM_BOUNDARY}\nContent-Disposition: form-data; name='access_token'\n\n{NGA_COOKIE}\n"
+        f"------WebKitFormBoundary{WEBKIT_FORM_BOUNDARY}\nContent-Disposition: form-data; name='__ngaClientChecksum'\n\n{NGA_CLIENT_CHECKSUM}\n"
+        f"------WebKitFormBoundary{WEBKIT_FORM_BOUNDARY}\nContent-Disposition: form-data; name='__inchst'\n\nUTF-8\n"
+        f"------WebKitFormBoundary{WEBKIT_FORM_BOUNDARY}--\n")
     headers = {
         'Host': 'ngabbs.com',
         'X-USER-AGENT': 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148  NGA_skull/10.1.36',
@@ -57,43 +97,18 @@ def doSign():
         'Sec-Fetch-Dest': 'empty',
         'Cookie': cookie
     }
-
+    last_exception = None
     for i in range(3):
         try:
-            response = requests.post(url, headers=headers, data=data, timeout=10)
+            response = requests.post(url, data=data, headers=headers, timeout=10)
             response.raise_for_status()  # 如果响应状态码不是200，主动抛出异常进行重试访问
-            response_data = response.json()
-            if "data" in response_data:
-                if "签到成功" in response_data["data"][0]:
-                    sum = response_data["data"][1]["sum"]
-                    continued = response_data["data"][1]["continued"]
-                    util.send_log(0, f"NGA社区 今日签到成功。当前连续签到 {continued} 天，累计签到 {sum} 天。")
-                    util.send_notify("NGA社区·签到：已完成",
-                                     f"NGA社区 今日签到成功。\n\n当前连续签到 {continued} 天，累计签到 {sum} 天。")
-                else:
-                    util.send_log(1, f"出现了未知错误,错误信息：{response_data['data'][0]}")
-                    util.send_notify("【失败】NGA社区·签到",
-                                     f"出现了未知错误，请查看日志！\n\n错误信息：{response_data['data'][0]}")
-            elif "error" in response_data:
-                if "你今天已经签到了" in response_data["error"][0]:
-                    util.send_log(0, "今天已经签到过，无需签到。")
-                    util.send_notify("NGA社区·签到：已签到", "今天已经签到过，无需签到。")
-                elif "你必须先登录论坛" in response_data["error"][0]:
-                    util.send_log(2, "NGA账号Cookie已过期，无法签到。请更新环境变量nga_cookie的值！")
-                    util.send_notify("【Cookie过期】NGA社区·签到", "NGA账号Cookie已过期，无法签到。需要更新环境变量nga_cookie的值！")
-                elif "CLIENT ERROR" in response_data["error"][0]:
-                    util.send_log(2, "NGA客户端校验码已过期/不适配/非IOS端抓包的校验码，无法通过NGA服务器验证。请更新环境变量nga_client_checksum的值！")
-                    util.send_notify("【Cookie过期】NGA社区·签到","NGA客户端校验码已过期/不适配/非IOS端抓包的校验码，无法NGA服务器验证。需要更新环境变量nga_client_checksum的值！")
-                else:
-                    util.send_log(1, f"出现了未知错误,错误信息：{response_data['error']}")
-                    util.send_notify("【失败】NGA社区·签到", f"出现了未知错误，请查看日志！\n\n错误信息：{response_data['error']}")
+            return response.json()
         except requests.RequestException as e:
+            last_exception = e
             util.send_log(1, f"URL访问失败（第{i + 1}次），5秒后重试……")
             if i < 2:  # 失败3次以内时，等待5秒后重试请求
                 time.sleep(5)
-            else:
-                util.send_log(3, f"API请求失败 - {e}")
-                util.send_notify("【失败】NGA社区·签到", f"API请求失败，请查看日志！\n\n错误信息：{e}")
+    raise last_exception  # 3次都失败时抛出最后一次失败时的异常，在主程序部分捕获，用于返回API访问失败导致程序运行失败的提示
 
 if __name__ == "__main__":
     util.send_log(0, "NGA社区 每日签到 - 开始执行")
