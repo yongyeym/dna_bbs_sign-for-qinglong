@@ -13,7 +13,7 @@ from Utility.common import common_util as util
 # 从环境变量获取Cookie
 ACCOUNT, USER_ID = util.get_os_env("kurobbs", "kuro_uid")
 
-def doSign():
+def doSign() -> None:
     """
     仅进行鸣潮游戏签到的脚本，老版本脚本留档，不再更新
     需要在下方 'roleId': 后面填入自己的游戏UID
@@ -52,24 +52,24 @@ def doSign():
     try:
         response = json.loads(requests.post(url, params=params, headers=headers).text)
         if response['code'] == 200 and "请求成功" in response['msg']:
-            util.send_log(0, "鸣潮·库街区 今日签到成功。")
+            util.send_log("鸣潮·库街区 今日签到成功。", "info")
             util.send_notify("鸣潮·签到：已完成", "鸣潮·库街区 今日签到成功。")
         elif response['code'] == 1511 and "请勿重复签到" in response['msg']:
-            util.send_log(0, "今天已经签到过，无需签到。")
+            util.send_log("今天已经签到过，无需签到。", "info")
             util.send_notify("鸣潮·签到：已签到", "今天已经签到过，无需签到。")
         elif response['code'] == 220 and "登录已过期，请重新登录" in response['msg']:
-            util.send_log(2, "库街区Cookie已过期，无法签到。请更新环境变量kurobbs的值！")
+            util.send_log("库街区Cookie已过期，无法签到。请更新环境变量kurobbs的值！", "error")
             util.send_notify("【Cookie过期】鸣潮·签到", "库街区Cookie已过期，无法签到。需要更新环境变量kurobbs的值！")
         else:
-            util.send_log(1, f"出现了未知错误： {response['code']} - {response['msg']}")
+            util.send_log(f"出现了未知错误： {response['code']} - {response['msg']}", "warning")
             util.send_notify("【失败】鸣潮·签到",
                              f"出现了未知错误，请查看日志！\n\n状态码与错误信息：{response['code']} - {response['msg']}")
     except requests.RequestException as e:
-        util.send_log(3, f"API请求失败 - {e}")
+        util.send_log(f"API请求失败 - {e}", "critical")
         util.send_notify("【失败】鸣潮·签到", f"API请求失败，请查看日志！\n\n错误信息：{e}")
 
 if __name__ == "__main__":
-    util.send_log(0, "鸣潮·库街区 每日签到 - 开始执行")
+    util.send_log("鸣潮·库街区 每日签到 - 开始执行", "info")
     value_check = ""
     if ACCOUNT is None:
         value_check += "【kurobbs】"
@@ -79,9 +79,9 @@ if __name__ == "__main__":
         try:
             doSign()
         except Exception as e:
-            util.send_log(3, f"程序运行报错 - {e}")
-            util.send_log(3, f"{traceback.format_exc()}")
+            util.send_log(f"程序运行报错 - {e}", "critical")
+            util.send_log(f"{traceback.format_exc()}", "critical")
             util.send_notify("【程序报错】鸣潮·签到", f"程序运行报错，请查看日志！\n\n错误信息：{e}")
     else:
-        util.send_log(2, f"缺少环境变量配置！需要添加环境变量：{value_check}")
+        util.send_log(f"缺少环境变量配置！需要添加环境变量：{value_check}", "error")
         util.send_notify("【缺少环境变量】鸣潮·签到", f"缺少环境变量，请添加以下环境变量后再使用：{value_check}")
