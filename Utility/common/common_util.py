@@ -1,22 +1,114 @@
 import os
+import configparser
 import logging
 import random
 import uuid
 import hashlib
 from datetime import datetime
+from pathlib import Path
 from typing import Dict, List, Union, Optional, NoReturn
 from Utility import notify
 
-def get_os_env(*args: str) -> tuple[str, ...]:
+# 配置文件相关
+CONFIG_DIR = Path(__file__).parent.parent.parent / "Config"
+CONFIG_PATH = CONFIG_DIR / "config.ini"
+DEFAULT_CONFIG = {
+    "use_local_cookie": "0",
+    "url_timeout": "10",
+    "url_retry_times": "5",
+    "url_retry_interval": "5",
+}
+COOKIE_CONFIG = {
+    "dnabbs": "",
+    "kurobbs": "",
+    "kuro_uid": "",
+    "nga_cookie": "",
+    "nga_uid": "",
+    "nga_client_checksum": "",
+}
+
+def get_os_env(*args: str) -> tuple[str | None, ...]:
     """
     获取对应的环境变量值，并去除前后空格，可一次获取多个环境变量
-    :arg *args：环境变量的Key，可以是多个
+    :param args：环境变量的Key，可以是多个
     :return 返回的值可以使用一个变量接收为数组列表（只获取一个变量时也需使用下标[0]来获取返回值），也可以分别赋予多个变量单独接收，如果不存在此环境变量，则返回None。
     """
     return tuple(
         value.strip() if value is not None else None
         for value in (os.getenv(arg) for arg in args)
     )
+
+def get_config_env(*args: str, section: str = "DEFAULT") -> tuple[str | None, ...]:
+    """
+    获取本地的配置文件Config/config.ini中的变量值，并去除前后空格，可一次获取多个环境变量
+    :param args：变量的Key，可以是多个
+    :param section: ini配置文件的分阻名，默认为DEFAULT
+    :return 返回的值可以使用一个变量接收为数组列表（只获取一个变量时也需使用下标[0]来获取返回值），也可以分别赋予多个变量单独接收，如果不存在此环境变量，则返回None。
+    """
+    config = configparser.ConfigParser()
+    # 检查配置文件是否存在，不存在则创建此文件并填入默认值
+    if not os.path.exists(CONFIG_PATH):
+        if not write_config_init():
+            return (None,) * len(args)  # 创建默认配置文件失败，返回包含与传入参数数量相同数量的None的元组
+    # 读取配置文件，若读取失败则返回包含与传入参数数量相同数量的None的元组
+    try:
+        config.read(CONFIG_PATH)
+    except configparser.Error:
+        return (None,) * len(args)
+    # 检查是否有传入的section，默认为DEFAULT，若不存在则返回包含与传入参数数量相同数量的None的元组
+    if section not in config:
+        return (None,) * len(args)
+    # 读取每个key的值，去除左右空格，如果不存在或为空字符串则返回None
+    return tuple((config[section].get(arg, "").strip() or None) for arg in args)
+
+def write_config_init() -> bool:
+    """
+    初始化配置文件，填入默认配置
+    """
+    os.makedirs(CONFIG_DIR, exist_ok=True)  # 确保目录存在
+    config = configparser.ConfigParser()
+    config['DEFAULT'] = DEFAULT_CONFIG
+    config['COOKIE'] = COOKIE_CONFIG
+    try:
+        with open(CONFIG_PATH, 'w') as f:
+            config.write(f)
+    except IOError as e:
+        send_log(f"无法创建或写入配置文件{CONFIG_PATH}！错误信息:{e}", "error")
+        return False
+    send_log(f"已初始化配置文件{CONFIG_PATH}！", "info")
+    return True
+
+def write_config_env(key: str, value: str = "", section: str = "DEFAULT") -> bool:
+    """
+    写入配置文件Config/config.ini中的变量值
+    :param key: 需要写入配置文件的Key键名
+    :param value: 需要写入配置文件的key对应的值，默认为空字符串（None）
+    :param section: 配置文件的分组，默认为DEFAULT
+    :return: 是否成功写入
+    """
+    if value is None:
+        value = ""
+    os.makedirs(CONFIG_DIR, exist_ok=True)  # 确保目录存在
+    config = configparser.ConfigParser()
+    # 配置文件不存在且创建默认配置文件失败，直接返回False
+    if not os.path.exists(CONFIG_PATH):
+        if not write_config_init():
+            return False
+    try:
+        config.read(CONFIG_PATH) # 读取配置文件原有内容
+        if section not in config:
+            config.add_section(section) # 如果不存在此section，则添加
+        config.set(str(section), str(key), str(value))
+        with open(CONFIG_PATH, 'w') as f:
+            config.write(f)
+    except configparser.Error:
+        send_log(f"{key} = {value} 无法读取配置文件{CONFIG_PATH}！", "error")
+        return False
+    except IOError as e:
+        send_log(f"{key} = {value} 写入配置文件{CONFIG_PATH}失败！错误信息:{e}", "error")
+        return False
+    send_log(f"{key} = {value} 已写入配置文件！", "info")
+    return True
 
 def get_timestamp(input_time: Optional[Union[datetime, str]] = None, type: str = "ms") -> int:
     """
