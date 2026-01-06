@@ -20,7 +20,7 @@ USE_LOCAL_COOKIE = util.get_config_env("use_local_cookie")[0] == "1"
 # 从本地配置文件获取URL访问失败重试的相关配置
 URL_TIMEOUT, URL_RETRY_TIMES, URL_RETRY_INTERVAL = map(lambda x: int(x) if x.isdigit() else 0, util.get_config_env("url_timeout", "url_retry_times", "url_retry_interval"))
 # 从环境变量或本地ini文件获取Cookie
-ACCOUNT = util.get_config_env("dnabbs")[0] if USE_LOCAL_COOKIE else util.get_os_env("dnabbs")[0]
+ACCOUNT = util.get_config_env("dnabbs", section="COOKIE")[0] if USE_LOCAL_COOKIE else util.get_os_env("dnabbs")[0]
 
 def get_dnabbs_userid() -> str:
     """

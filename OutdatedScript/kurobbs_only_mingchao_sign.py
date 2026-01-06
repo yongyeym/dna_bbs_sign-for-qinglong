@@ -13,7 +13,7 @@ from Utility.common import common_util as util
 # 从本地配置文件获取是否使用本地Cookie
 USE_LOCAL_COOKIE = util.get_config_env("use_local_cookie")[0] == "1"
 # 从环境变量或本地ini文件获取Cookie和UID
-ACCOUNT, USER_ID = util.get_config_env("kurobbs", "kuro_uid") if USE_LOCAL_COOKIE else util.get_os_env("kurobbs", "kuro_uid")
+ACCOUNT, USER_ID = util.get_config_env("kurobbs", "kuro_uid", section="COOKIE") if USE_LOCAL_COOKIE else util.get_os_env("kurobbs", "kuro_uid")
 
 def doSign() -> None:
     """
