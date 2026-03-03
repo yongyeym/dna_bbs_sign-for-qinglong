@@ -12,7 +12,9 @@
 ql repo https://github.com/yongyeym/AutoSign_QingLong.git
 ```
 ---
-Config/config.ini配置文件说明：
+
+<details>
+  <summary>【点击这里查看：Config/config.ini配置文件说明】</summary>
 
 存放所有脚本通用的配置，可根据需要修改
 ```
@@ -32,8 +34,6 @@ url_retry_interval = 5
 存放各个脚本需要获取的变量，默认不启用
 ```
 [COOKIE]
-# 二重螺旋/皎皎角
-dnabbs =
 
 # 鸣潮/库街区
 kurobbs = 
@@ -44,6 +44,9 @@ nga_cookie =
 nga_uid = 
 nga_client_checksum = 
 ```
+
+</details>
+
 ---
 ```
 task yongyeym_AutoSign_QingLong_main/kurobbs_sign.py
@@ -55,27 +58,41 @@ task yongyeym_AutoSign_QingLong_main/kurobbs_sign.py
 ##### ⚠ 目前可能存在问题，cookie中用于验证的acw_tc值尚未找到正确的生成方式，目前采用随机生成，可能出现获取到角色UID后，下一个请求返回登录已过期的问题，可从IOS或安卓版库街区APP抓包一个新的账号token再尝试一下 ⚠
 1. 默认自动执行时间为每天凌晨3分，cron：0 3 0 * * ?
 2. 青龙面板添加环境变量：kurobbs，可从[库街区PC端网页](http://www.kurobbs.com/mc/home/9)获取账号token（ey开头）；
-3. 青龙面板添加环境变量：kuro_uid，库街区账号的UID，可在库街区个人页找到；
+3. 青龙面板添加环境变量：kuro_uid，库街区账号的UID，可在库街区个人页找到，不是游戏角色UID；
 
 #### 更新日志：
+
 2026/02/04：
-* 因新脚本运行多周未出现任何问题，老版本脚本/OutdatedScript/kurobbs_only_mingchao_sign.py将不再更新，但仍保留，如有需要可继续使用，不保证后续兼容性。
+* 因新脚本运行多周未出现任何问题，老版本脚本/old_files/kurobbs_only_mingchao_sign.py将不再更新，但仍保留，如有需要可继续使用，不保证后续兼容性。
 ---
-```
-task yongyeym_AutoSign_QingLong_main/dnabbs_sign.py
-```
 #### 二重螺旋&皎皎角社区 国服 每日任务与签到
+#### 已放弃，不再更新！
+<details>
+  <summary>【点击这里查看详细内容】</summary>
+
+```
+task yongyeym_AutoSign_QingLong_main/old_files/dnabbs_sign.py
+```
 ##### 皎皎角社区每日签到、二重螺旋每日签到、皎皎角社区每日任务（点赞、浏览、分享）
 ##### 关于回复帖子5次的每日任务：经测试，此任务必须回复5个不同的帖子才会计数，且每个帖子都只有一次计数机会，即非同一天回复同一个帖子时，此任务也不会计数。由于以上限制，无法直接对官方水贴回复5次来完成任务，随机水贴回复其他玩家帖子可能出现不可预料的情况，因此放弃自动处理此任务。
 1. 默认自动执行时间为每天凌晨3分，cron：0 3 0 * * ?
 2. 青龙面板添加环境变量：dnabbs，可从[皎皎角PC端网页](https://dnabbs.yingxiong.com/pc)获取账号cookie（ey开头）；
 
 #### 更新日志：
+
+2026/03/03:
+* 游戏退坑，不再更新此脚本，脚本移动到/old_files/dnabbs_sign.py
+* （因本人对加密和爬虫逆向方面完全不懂，现学现卖，请求堆栈里看了半天也没找到Tn值在哪里生成的，如有哪位大佬找到了求解惑）
+* 因移动端增加了代理检测，常规手段无法抓包，脚本中的请求参数理论上只需要补上签名验证key就可以正常使用，有需要的可自行尝试。
+
 2026/02/04：
 * 目前更多请求增加了签名验证key，如游戏签到和点赞操作，实际上两周前官方就已经更新了此验证，但恰逢终末地公测，沉迷爆肝拉电线去了……
 * 同时期IOS版APP也增加了代理检测，挂任何代理APP都会直接禁止自身网络访问，使得抓包API异常麻烦，实力不足，只能暂时用原有抓包的数据用着……
 * 由于签名验证key机制无法使用随机值过验证，且key值会根据请求每次单独生成，抓包获取的key可用时间仅有一两天，因此删除了之前增加的两个验证key变量，环境变量中不再需要配置。
 * 暂无法获取签名验证key的生成规则，调整了社区任务部分的执行顺序，将不需要使用签名验证key的操作任务放到最前方执行，确保基本可用。
+
+</details>
+
 ---
 ```
 task yongyeym_AutoSign_QingLong_main/nga_sign.py

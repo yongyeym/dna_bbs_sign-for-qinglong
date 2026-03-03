@@ -20,7 +20,6 @@ DEFAULT_CONFIG = {
     "url_retry_interval": "5",
 }
 COOKIE_CONFIG = {
-    "dnabbs": "",
     "kurobbs": "",
     "kuro_uid": "",
     "nga_cookie": "",
