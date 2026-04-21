@@ -35,18 +35,41 @@ url_retry_interval = 5
 ```
 [COOKIE]
 
-# 鸣潮/库街区
+# 鸣潮·库街区
 kurobbs = 
 kuro_uid =
 
 # NGA
 nga_cookie = 
 nga_uid = 
-nga_client_checksum = 
+nga_client_checksum =
+
+#异环·塔吉多
+tajiduo=
+
 ```
 
 </details>
 
+---
+```
+task yongyeym_AutoSign_QingLong_main/nga_sign.py
+```
+#### NGA社区 每日签到
+##### 仅适配IOS端，需要抓包IOS版APP
+##### ⚠ 目前NGA客户端验证参数ngaClientChecksum无法使用随机生成值，且不同平台的值格式不同，目前仅做IOS版适配，需要抓包获取 ⚠
+1. 默认自动执行时间为每天凌晨3分，cron：0 3 0 * * ?
+2. 青龙面板添加环境变量：nga_uid、nga_cookie、nga_client_checksum
+3. 从[NGA社区PC端网页](https://bbs.nga.cn/)或APP抓包获取cookie中部分内容，从F12网络选项卡中，找到nuke.php请求header中的cookie：
+   * nga_uid：账号的UID，可以直接去个人主页找到，也可以在PC版cookie中的ngaPassportUid，移动版cookie中的access_uid中找到；
+   * nga_cookie：账号的Cookie，在PC版cookie中的ngaPassportCid，移动版cookie中的access_token中看到；
+4. 使用IOS抓包工具，抓取IOS版恩基爱论坛APP，从请求头表单中找到__ngaClientChecksum的值：
+   * nga_client_checksum：NGA的IOS版客户端校验码，IOS版本是以/uid结尾的字符串；
+
+#### 更新日志：
+
+2025/12/12：
+* 初始版本发布
 ---
 ```
 task yongyeym_AutoSign_QingLong_main/kurobbs_sign.py
@@ -54,16 +77,34 @@ task yongyeym_AutoSign_QingLong_main/kurobbs_sign.py
 #### 鸣潮&库街区 国服 每日游戏签到
 ##### 库街区每日签到、鸣潮每日签到、库街区社区每日任务（点赞、浏览、分享）
 ##### 只对鸣潮处理，没有战双帕弥什的游戏签到，但理论上只需要把各参数里的gameId从3改成2即可
-##### 目前必须手动设置库街区账号的UID，获取账号信息的API全部需要传入此UID进行查询，但尚未找到可以仅通过token获取此UID的API
-##### ⚠ 目前可能存在问题，cookie中用于验证的acw_tc值尚未找到正确的生成方式，目前采用随机生成，可能出现获取到角色UID后，下一个请求返回登录已过期的问题，可从IOS或安卓版库街区APP抓包一个新的账号token再尝试一下 ⚠
+##### 目前必须手动设置库街区账号的UID，获取账号信息的API全部需要传入此UID进行查询，但尚未找到可以仅通过token获取此UID的方式
+##### ⚠ 脚本可能存在的问题：cookie中用于验证的acw_tc值尚未找到正确的生成方式，目前采用随机生成，可能出现获取到角色UID后，下一个请求返回登录已过期的问题，可从IOS或安卓版库街区APP抓包一个新的账号token再尝试一下 ⚠
 1. 默认自动执行时间为每天凌晨3分，cron：0 3 0 * * ?
 2. 青龙面板添加环境变量：kurobbs，可从[库街区PC端网页](http://www.kurobbs.com/mc/home/9)获取账号token（ey开头）；
 3. 青龙面板添加环境变量：kuro_uid，库街区账号的UID，可在库街区个人页找到，不是游戏角色UID；
 
 #### 更新日志：
 
+2026/04/21：
+* 修复几处不影响使用的错别字。
 2026/02/04：
 * 因新脚本运行多周未出现任何问题，老版本脚本/old_files/kurobbs_only_mingchao_sign.py将不再更新，但仍保留，如有需要可继续使用，不保证后续兼容性。
+2025/12/12：
+* 初始版本发布，代码由二重螺旋签到脚本代码修改而来，用以替代原本只有游戏签到一个功能的简单脚本。
+---
+```
+task yongyeym_AutoSign_QingLong_main/tajiduo_sign.py
+```
+#### 异环&塔吉多 国服 每日游戏签到
+##### 塔吉多异环版区每日签到、异环每日签到、塔吉多社区每日任务（点赞、浏览、分享）
+##### 只对异环处理，没有幻塔的游戏签到
+1. 默认自动执行时间为每天凌晨3分，cron：0 3 0 * * ?
+2. 青龙面板添加环境变量：tajiduo，只测试过IOS端APP抓包的值，可从塔吉多APP抓包任意get/post请求，找到请求头中的Authorization值，PC端网页使用的是不同的请求头，不做适配；
+
+#### 更新日志：
+
+2026/04/21：
+* 初始版本发布，代码由鸣潮签到脚本代码修改而来，由于游戏尚未公测，游戏签到未开放，相关功能暂时无法制作。
 ---
 #### 二重螺旋&皎皎角社区 国服 每日任务与签到
 #### 已放弃，不再更新！
@@ -83,7 +124,7 @@ task yongyeym_AutoSign_QingLong_main/old_files/dnabbs_sign.py
 2026/03/03:
 * 游戏退坑，不再更新此脚本，脚本移动到/old_files/dnabbs_sign.py
 * （因本人对加密和爬虫逆向方面完全不懂，现学现卖，请求堆栈里看了半天也没找到Tn值在哪里生成的，如有哪位大佬找到了求解惑）
-* 因移动端增加了代理检测，常规手段无法抓包，脚本中的请求参数理论上只需要补上签名验证key就可以正常使用，有需要的可自行尝试。
+* 因移动端增加了代理检测，常规手段无法抓包，但脚本中的请求参数理论上只需要补上签名验证key就可以正常使用，有需要的可自行尝试。
 
 2026/02/04：
 * 目前更多请求增加了签名验证key，如游戏签到和点赞操作，实际上两周前官方就已经更新了此验证，但恰逢终末地公测，沉迷爆肝拉电线去了……
@@ -91,20 +132,9 @@ task yongyeym_AutoSign_QingLong_main/old_files/dnabbs_sign.py
 * 由于签名验证key机制无法使用随机值过验证，且key值会根据请求每次单独生成，抓包获取的key可用时间仅有一两天，因此删除了之前增加的两个验证key变量，环境变量中不再需要配置。
 * 暂无法获取签名验证key的生成规则，调整了社区任务部分的执行顺序，将不需要使用签名验证key的操作任务放到最前方执行，确保基本可用。
 
+2025/12/12：
+* 初始版本发布
+
 </details>
 
----
-```
-task yongyeym_AutoSign_QingLong_main/nga_sign.py
-```
-#### NGA社区 每日签到
-##### 仅适配IOS端，需要抓包IOS版APP
-##### ⚠ 目前NGA客户端验证参数ngaClientChecksum无法找到正确的生成方式，不同平台的值不同，目前仅做IOS版适配，需要抓包获取 ⚠
-1. 默认自动执行时间为每天凌晨3分，cron：0 3 0 * * ?
-2. 青龙面板添加环境变量：nga_uid、nga_cookie、nga_client_checksum
-3. 从[NGA社区PC端网页](https://bbs.nga.cn/)或APP抓包获取cookie中部分内容，从F12网络选项卡中，找到nuke.php请求header中的cookie：
-   * nga_uid：账号的UID，可以直接去个人主页找到，也可以在PC版cookie中的ngaPassportUid，移动版cookie中的access_uid中找到；
-   * nga_cookie：账号的Cookie，在PC版cookie中的ngaPassportCid，移动版cookie中的access_token中看到；
-4. 使用IOS抓包工具，抓取IOS版恩基爱论坛APP，从请求头表单中找到__ngaClientChecksum的值：
-   * nga_client_checksum：NGA的IOS版客户端校验码，IOS版本是以/uid结尾的字符串；
 ---
