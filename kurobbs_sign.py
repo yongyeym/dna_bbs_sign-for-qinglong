@@ -59,7 +59,7 @@ def get_kurobbs_userid() -> tuple[str, str]:
 def get_kurobbs_taskprocess() -> tuple[int, ...]:
     """
     API：encourage/level/getTaskProcess
-    获取皎皎角社区用户的社区每日任何和一次性任务完成情况：
+    获取库街区社区用户的社区每日任务和一次性任务完成情况：
     :return 返回每日任务还差几次完成，like 每日点赞5次帖子、read 每日阅读3次帖子、share 每日分享1次帖子、bbs_sign 社区签到情况
     """
     bbs_sign = like = read = share = 0

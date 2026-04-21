@@ -25,6 +25,7 @@ COOKIE_CONFIG = {
     "nga_cookie": "",
     "nga_uid": "",
     "nga_client_checksum": "",
+    "tajiduo": "",
 }
 USE_LOCAL_COOKIE = 0
 URL_TIMEOUT = 15
@@ -223,7 +224,7 @@ def get_uuid(uuid_type: int = 4, need_upper: bool = True, need_hex: bool = False
         new_uuid = new_uuid.hex
     new_uuid = str(new_uuid)  # 进行字符串化
     if need_upper:
-        new_uuid.upper()
+        new_uuid = new_uuid.upper()
     return new_uuid
 
 def get_md5(content: str) -> str:
