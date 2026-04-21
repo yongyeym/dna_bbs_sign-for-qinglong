@@ -68,6 +68,7 @@ task yongyeym_AutoSign_QingLong_main/nga_sign.py
 
 #### 更新日志：
 
+
 2025/12/12：
 * 初始版本发布
 ---
@@ -85,10 +86,13 @@ task yongyeym_AutoSign_QingLong_main/kurobbs_sign.py
 
 #### 更新日志：
 
+
 2026/04/21：
 * 修复几处不影响使用的错别字。
+
 2026/02/04：
 * 因新脚本运行多周未出现任何问题，老版本脚本/old_files/kurobbs_only_mingchao_sign.py将不再更新，但仍保留，如有需要可继续使用，不保证后续兼容性。
+
 2025/12/12：
 * 初始版本发布，代码由二重螺旋签到脚本代码修改而来，用以替代原本只有游戏签到一个功能的简单脚本。
 ---
@@ -102,6 +106,7 @@ task yongyeym_AutoSign_QingLong_main/tajiduo_sign.py
 2. 青龙面板添加环境变量：tajiduo，只测试过IOS端APP抓包的值，可从塔吉多APP抓包任意get/post请求，找到请求头中的Authorization值，PC端网页使用的是不同的请求头，不做适配；
 
 #### 更新日志：
+
 
 2026/04/21：
 * 初始版本发布，代码由鸣潮签到脚本代码修改而来，由于游戏尚未公测，游戏签到未开放，相关功能暂时无法制作。
