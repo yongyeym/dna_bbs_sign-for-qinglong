@@ -23,7 +23,7 @@ def get_tajiduo_taskprocess() -> tuple[int, ...]:
     获取塔吉多社区用户的社区每日任务（task_list1）和一次性任务（task_list2）完成情况：
     :return 返回每日任务还差几次完成，like 每日点赞5次帖子、read 每日阅读3次帖子、share 每日分享1次帖子、bbs_sign 社区签到情况, bbs_sign_times 社区签到天数
     """
-    bbs_sign = like = read = share = bbs_sign_times = 0
+    bbs_sign = like = read = share = 0
     url = "https://bbs-api.tajiduo.com/apihub/api/getUserTasks?gid=1"
     data = {
         'gid': "1",  # 未知用途
@@ -40,7 +40,6 @@ def get_tajiduo_taskprocess() -> tuple[int, ...]:
                 share = data[i]['limitTimes'] - data[i]['completeTimes']
             if data[i]['taskKey'] == "signin_c":
                 bbs_sign = data[i]['limitTimes'] - data[i]['completeTimes']
-                bbs_sign_times = data[i]['contTimes']
         return int(read), int(like), int(share), int(bbs_sign), int(bbs_sign_times)
     elif response["code"] == 220:
         raise SPException("Cookie失效", "Cookie失效，请更新环境变量tajiduo的值！")
@@ -173,7 +172,7 @@ def do_share(postId: str) -> bool:
     else:
         raise SPException("社区分享任务失败", f"社区分享任务失败！请求出现异常或被拒绝！Code {response['code']} - {response['msg']}")
 
-def do_signin_bbs(bbs_sign_times: int) -> str:
+def do_signin_bbs() -> str:
     """
     API：apihub/api/signin
     进行塔吉多签到的API
@@ -187,7 +186,7 @@ def do_signin_bbs(bbs_sign_times: int) -> str:
     response = get_response(url, data, 1)
     if response["code"] == 0:
         response_data = response["data"]
-        message += f"塔吉多社区签到成功：当前已连续签到 {bbs_sign_times + 1} 天。今天的签到奖励是「异环版区经验」*{response_data['exp']}、「塔塔币」*{response_data['goldCoin']}。"
+        message += f"塔吉多社区签到成功：今天的签到奖励是「异环版区经验」*{response_data['exp']}、「塔塔币」*{response_data['goldCoin']}。"
         return message
     elif response["code"] == 220:
         raise SPException("Cookie失效", "Cookie失效，请更新环境变量tajiduo的值！")
@@ -348,7 +347,7 @@ if __name__ == "__main__":
                 restart_flag = False  # 循环开始将重新运行开关关闭
                 attempt += 1  # 每次运行令运行次数计数+1，超出3次后不论是否成功都不再尝试
                 # 获取用户今日任务完成情况，返回还需要进行多少次浏览帖子、点赞、社区签到、游戏签到、回复他人帖子次数的操作
-                read, like, share, bbs_sign, bbs_sign_times = get_tajiduo_taskprocess()
+                read, like, share, bbs_sign = get_tajiduo_taskprocess()
                 time.sleep(2)
                 # 直接使用获取本月游戏签到奖励列表API，其中也会有今天是否签到的data
                 game_sign, award = 0,"sss"
@@ -419,13 +418,13 @@ if __name__ == "__main__":
 
             # 如果需要社区签到，则执行签到
             if bbs_sign == 1:
-                message_bbs_sign = do_signin_bbs(bbs_sign_times)
+                message_bbs_sign = do_signin_bbs()
                 util.send_log(message_bbs_sign, "info")
                 notify_content += f"{message_bbs_sign}\n\n"
                 time.sleep(5)
             else:
-                util.send_log(f"社区签到已完成，当前已连续签到 {bbs_sign_times} 天，不需要进行操作；", "info")
-                notify_content += f"社区签到已完成，当前已连续签到 {bbs_sign_times} 天，不需要进行操作；\n\n"
+                util.send_log(f"社区签到已完成，不需要进行操作；", "info")
+                notify_content += f"社区签到已完成，不需要进行操作；\n\n"
             # 如果需要游戏签到，则执行签到
             if game_sign == 1:
                 message_game_sign = do_signin_game()
