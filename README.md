@@ -96,6 +96,8 @@ task yongyeym_AutoSign_QingLong_main/kurobbs_sign.py
 2025/12/12：
 * 初始版本发布，代码由二重螺旋签到脚本代码修改而来，用以替代原本只有游戏签到一个功能的简单脚本。
 ---
+<details>
+  <summary>【异环·塔吉多】暂留</summary>
 ```
 task yongyeym_AutoSign_QingLong_main/tajiduo_sign.py
 ```
@@ -103,13 +105,15 @@ task yongyeym_AutoSign_QingLong_main/tajiduo_sign.py
 ##### 塔吉多异环版区每日签到、异环每日签到、塔吉多社区每日任务（点赞、浏览、分享）
 ##### 只对异环处理，没有幻塔的游戏签到
 1. 默认自动执行时间为每天凌晨3分，cron：0 3 0 * * ?
-2. 青龙面板添加环境变量：tajiduo，只测试过IOS端APP抓包的值，可从塔吉多APP抓包任意get/post请求，找到请求头中的Authorization值，PC端网页使用的是不同的请求头，不做适配；
+2. 青龙面板添加环境变量：tajiduo。
 
 #### 更新日志：
 
 
 2026/04/21：
-* 初始版本发布，代码由鸣潮签到脚本代码修改而来，由于游戏尚未公测，游戏签到未开放，相关功能暂时无法制作。
+* 初始版本发布，代码由鸣潮签到脚本代码修改而来，尚未解决Token授权码问题，登录授权，码每天会更新，无法连续使用。
+</details>
+
 ---
 #### 二重螺旋&皎皎角社区 国服 每日任务与签到
 #### 已放弃，不再更新！
