@@ -11,10 +11,22 @@ import traceback
 from Utility.common import common_util as util
 from Utility.common.common_util import SPException
 
-# 获取一个随机生成的UUID，在本次运行期间使用，用于给请求头的devCode赋值
-UUID = util.get_uuid(4, True, True)
+# 获取一个随机生成的UUID4，在本次运行期间使用，用于给请求头的devCode赋值
+DEV_CODE = util.get_uuid(4, True, False)
+# 获取一个随机生成的UUID4，在本次运行期间使用，用于给请求头的distinct_id赋值，值的后面需要加上指定后缀，且与devCode的UUID4不同
+DISTINCT_ID = util.get_uuid(4, True, False) + "_3"
 # 从环境变量或本地ini文件获取Cookie和UID
 ACCOUNT, USER_ID = util.get_config_env("kurobbs", "kuro_uid", section="COOKIE") if util.USE_LOCAL_COOKIE else util.get_os_env("kurobbs", "kuro_uid")
+# 请求头通用部分
+HEADERS_COMMON = {
+    'Accept-Encoding': "gzip, deflate",
+    'Content-Type': "application/x-www-form-urlencoded",
+    'source': "ios",
+    'Host': "api.kurobbs.com",
+    'Accept-Language': "zh-CN,zh-Hans;q=0.9",
+    'Connection': "keep-alive",
+    'token': ACCOUNT
+}
 
 def get_acw_tc() -> str:
     """
@@ -28,11 +40,13 @@ def get_acw_tc() -> str:
 
 # 获取一个随机生成的acw_tc值，在本次运行期间使用，用于给请求头cookie赋值
 # 尚不清楚这个值的产生方式，使用AI分析可能的组成方式而写出的生成代码，验证生成值可以使用，但无法确保一定可用
-ACW_TC = get_acw_tc()
+# 目前已经不需要这个值了，原实现方法做保留
+#ACW_TC = get_acw_tc()
 
-def get_kurobbs_userid() -> tuple[str, str]:
+def old_get_kurobbs_userid() -> tuple[str, str]:
     """
     API：gamer/role/default
+    ※注意：此API已不再使用，更换了新API，但目前此API仍然可以正常返回数据，仅作保留
     获取库街区社区账号默认绑定角色的UID、游戏所在服务器serverID，用于执行签到等操作：
     也有API user/mineV2，但只能查询库街区账号信息，无游戏角色信息
     :return 返回游戏角色roleId、游戏服务器serverID
@@ -50,7 +64,34 @@ def get_kurobbs_userid() -> tuple[str, str]:
                 break  # 只获取鸣潮游戏的信息，找到后中断循环
         return  response_data["roleId"],response_data["serverId"]
     elif response["code"] == 220:
-        raise SPException("Cookie失效", "Cookie失效，请更新环境变量kurobbs的值！")
+        raise SPException("Token失效", "Token失效，请更新环境变量kurobbs的值！")
+    elif response["code"] == 500:
+        raise SPException("获取账号ID失败", f"获取账号ID失败！请求被拒绝，请重新尝试或检查日志！错误信息：{response['msg']}")
+    else:
+        raise SPException("获取账号ID失败",f"获取账号ID失败！请求出现异常或被拒绝！Code {response['code']} - {response['msg']}")
+
+def get_kurobbs_userid() -> tuple[str, str]:
+    """
+    API：user/role/findUserDefaultRole
+    新的API，返回数据格式与之前的API相同，仅URL变化和更新了新版本请求头
+    获取库街区社区账号默认绑定角色的UID、游戏所在服务器serverID，用于执行签到等操作：
+    也有API user/mineV2，但只能查询库街区账号信息，无游戏角色信息
+    :return 返回游戏角色roleId、游戏服务器serverID
+    """
+    url = "https://api.kurobbs.com/user/role/findUserDefaultRole"
+    data = {
+        'queryUserId': USER_ID  # 库街区账号UID
+    }
+    response = get_response(url, data, 2)
+    if response["code"] == 200:
+        response_data = response["data"]["defaultRoleList"]  # 获取包含账号所有游戏默认角色的信息数组
+        for i in range(len(response_data)):
+            if response_data[i]['gameId'] == 3:
+                response_data = response_data[i]
+                break  # 只获取鸣潮游戏的信息，找到后中断循环
+        return  response_data["roleId"],response_data["serverId"]
+    elif response["code"] == 220:
+        raise SPException("Token失效", "Token失效，请更新环境变量kurobbs的值！")
     elif response["code"] == 500:
         raise SPException("获取账号ID失败", f"获取账号ID失败！请求被拒绝，请重新尝试或检查日志！错误信息：{response['msg']}")
     else:
@@ -66,7 +107,7 @@ def get_kurobbs_taskprocess() -> tuple[int, ...]:
     url = "https://api.kurobbs.com/encourage/level/getTaskProcess"
     data = {
         'gameId': "0",  # 对应ID 0 库街区
-        'userId': USER_ID
+        #'userId': USER_ID  # 库街区账号UID，目前此API已经不需要此值了
     }
     response = get_response(url, data, 2)
     if response["code"] == 200:
@@ -82,7 +123,7 @@ def get_kurobbs_taskprocess() -> tuple[int, ...]:
                 bbs_sign = data[i]['needActionTimes'] - data[i]['completeTimes']
         return int(read), int(like), int(share), int(bbs_sign)
     elif response["code"] == 220:
-        raise SPException("Cookie失效", "Cookie失效，请更新环境变量kurobbs的值！")
+        raise SPException("Token失效", "Token失效，请更新环境变量kurobbs的值！")
     elif response["code"] == 500:
         raise SPException("获取社区每日任务进度失败", f"获取社区每日任务进度失败！请求被拒绝，请重新尝试或检查日志！错误信息：{response['msg']}")
     else:
@@ -112,7 +153,7 @@ def get_kurobbs_new_formlist() -> tuple[str, str]:
         data = response["data"]["postList"][0]
         return data["postId"], data["userId"]
     elif response["code"] == 220:
-        raise SPException("Cookie失效", "Cookie失效，请更新环境变量kurobbs的值！")
+        raise SPException("Token失效", "Token失效，请更新环境变量kurobbs的值！")
     elif response["code"] == 500:
         raise SPException("获取最新帖子列表失败", f"获取最新帖子列表失败！请求被拒绝，请重新尝试或检查日志！错误信息：{response['msg']}")
     else:
@@ -135,7 +176,7 @@ def get_post_detail(postId: str) -> bool:
     if response["code"] == 200:
         return False
     elif response["code"] == 220:
-        raise SPException("Cookie失效", "Cookie失效，请更新环境变量kurobbs的值！")
+        raise SPException("Token失效", "Token失效，请更新环境变量kurobbs的值！")
     elif response["code"] == 501:
         return True  # 这篇帖子被删除，返回False令程序从获取新的帖子ID步骤从新开始执行
     elif response["code"] == 500:
@@ -169,7 +210,7 @@ def do_like(postId: str,toUserId: str) -> bool:
     if response["code"] == 200:
         return False
     elif response["code"] == 220:
-        raise SPException("Cookie失效", "Cookie失效，请更新环境变量kurobbs的值！")
+        raise SPException("Token失效", "Token失效，请更新环境变量kurobbs的值！")
     elif response["code"] == 501:
         return True  # 这篇帖子被删除，返回False令程序从获取新的帖子ID步骤从新开始执行
     elif response["code"] == 500:
@@ -202,7 +243,7 @@ def do_unlike(postId: str,toUserId: str) -> bool:
     if response["code"] == 200:
         return False
     elif response["code"] == 220:
-        raise SPException("Cookie失效", "Cookie失效，请更新环境变量kurobbs的值！")
+        raise SPException("Token失效", "Token失效，请更新环境变量kurobbs的值！")
     elif response["code"] == 501:
         return True  # 这篇帖子被删除，返回False令程序从获取新的帖子ID步骤从新开始执行
     elif response["code"] == 500:
@@ -226,7 +267,7 @@ def do_share(postId: str) -> bool:
     if response["code"] == 200:
         return False
     elif response["code"] == 220:
-        raise SPException("Cookie失效", "Cookie失效，请更新环境变量kurobbs的值！")
+        raise SPException("Token失效", "Token失效，请更新环境变量kurobbs的值！")
     elif response["code"] == 501:
         return True  # 这篇帖子被删除，返回False令程序从获取新的帖子ID步骤从新开始执行
     elif response["code"] == 500:
@@ -262,7 +303,7 @@ def do_signin_bbs() -> str:
                 message += "。"
         return message
     elif response["code"] == 220:
-        raise SPException("Cookie失效", "Cookie失效，请更新环境变量kurobbs的值！")
+        raise SPException("Token失效", "Token失效，请更新环境变量kurobbs的值！")
     elif response["code"] == 1551:
         message += "库街区社区今天已经签到过了，无需签到。"
         return message
@@ -315,7 +356,7 @@ def get_signin_game_awards_list(roleId: str, server_id: str) -> tuple[int, str, 
                     break  # 找到当天的奖励了，直接中断for循环
         return game_sign, award, signin_time
     elif response["code"] == 220:
-        raise SPException("Cookie失效", "Cookie失效，请更新环境变量kurobbs的值！")
+        raise SPException("Token失效", "Token失效，请更新环境变量kurobbs的值！")
     elif response["code"] == 500:
         raise SPException("获取鸣潮游戏签到奖励失败", f"获取鸣潮游戏签到奖励失败！请求被拒绝，请重新尝试或检查日志！错误信息：{response['msg']}")
     else:
@@ -345,7 +386,7 @@ def do_signin_game(award: str, signin_time: int, roleId: str, server_id: str) ->
         message += f"鸣潮游戏签到成功：当月已签到 {signin_time} 天。今天的游戏签到奖励是{award}。"
         return message
     elif response["code"] == 220:
-        raise SPException("Cookie失效", "Cookie失效，请更新环境变量kurobbs的值！")
+        raise SPException("Token失效", "Token失效，请更新环境变量kurobbs的值！")
     elif response["code"] == 1511:
         message += f"鸣潮游戏今天已经签到过了，今天的游戏签到奖励是 {award}。"
         return message
@@ -357,50 +398,33 @@ def get_response(url: str, data: dict[str, str], headers_type: int) -> any:
     返回处理为json的response
     :param url: 请求的url
     :param data: 请求的data
-    :param headers_type:存在两种headers，第一种用于部分执行操作的API（如签到），第二种用于大部分获取数据的API
+    :param headers_type:存在两种headers，第一种用于部分执行操作的API（如游戏签到），第二种用于大部分社区功能相关的API
     :return 返回json化的response
     """
     headers1 = {
-        'User-Agent': "Mozilla/5.0 (Linux; Android 12; 23116PN5BC Build/V417IR; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/101.0.4951.61 Safari/537.36 Kuro/2.9.0 KuroGameBox/2.9.0",
-        'Accept-Encoding': "gzip, deflate",
-        'Content-Type': "application/x-www-form-urlencoded",
+        **HEADERS_COMMON,
+        'User-Agent': "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko)  KuroGameBox/3.0.3",
         'Accept': "application/json, text/plain, */*",
-        'Pragma': "no-cache",
-        'Cache-Control': "no-cache",
-        'sec-ch-ua': "\"Chromium\";v=\"124\", \"Android WebView\";v=\"124\", \"Not-A.Brand\";v=\"99\"",
-        'source': "android",
-        'devCode': "111.16.126.206, Mozilla/5.0 (Linux; Android 12; 23116PN5BC Build/V417IR; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/101.0.4951.61 Safari/537.36 Kuro/2.9.0 KuroGameBox/2.9.0",
-        'sec-ch-ua-platform': "\"Android\"",
-        'Host': "api.kurobbs.com",
         'Origin': "https://web-static.kurobbs.com",
-        'X-Requested-With': "com.kurogame.kjq",
         'Sec-Fetch-Site': "same-site",
         'Sec-Fetch-Mode': "cors",
         'Sec-Fetch-Dest': "empty",
-        'Accept-Language': "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
-        'Connection': "keep-alive",
-        'Content-Length': "83",
-        'token': ACCOUNT
+        'Priority': "u=3, i",
+        'devCode': "111.16.160.144, Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko)  KuroGameBox/3.0.3",
     }
     headers2 = {
-        'User-Agent': "okhttp/3.11.0",
-        'Accept-Encoding': "gzip",
-        'Content-Type': "application/x-www-form-urlencoded",
-        'source': "android",
-        'distinct_id': "413b65e1-8dda-4d7f-b6d2-b782f008c0e8",
-        'versionCode': "2900",
-        'version': "2.9.0",
-        'countryCode': "CN",
-        'Host': "api.kurobbs.com",
-        'model': "23116PN5BC",
-        'lang': "zh-Hans",
-        'Connection': "Keep-Alive",
-        'channelId': "8",
+        **HEADERS_COMMON,
+        'User-Agent': "KuroGameBox/20260513195311 CFNetwork/3860.600.12 Darwin/25.5.0",
+        'channelId': "1",
+        'version': "3.0.3",
+        'distinct_id': DISTINCT_ID,
+        'channel': "appstore",
+        'Accept': "*/*",
+        'devCode': DEV_CODE,
         'ip': "192.168.1.2",
-        'devCode': UUID,
-        'Content-Length': "24",
-        'token': ACCOUNT,
-        'Cookie': f"user_token={ACCOUNT}; acw_tc={ACW_TC}"
+        'lang': "zh-Hans",
+        'model': "iPhone15,4",
+        'osVersion': "26.5",
     }
     last_exception = None
     for i in range(util.URL_RETRY_TIMES):
@@ -441,7 +465,7 @@ if __name__ == "__main__":
                 # 获取用户库街区账号绑定的默认角色UID和服务器ID
                 roleId, server_id = get_kurobbs_userid()
                 util.send_log(f"已获取用户库街区账号绑定的默认角色UID：{roleId}，账号所在服务器ID：{server_id}。", "info")
-                notify_content += f"已获取用户库街区账号绑定的默认角色UID：{roleId}，账号所在服务器ID：{server_id}。\n\n"
+                notify_content += f"已获取用户库街区账号绑定的默认角色UID：{roleId}。\n\n"
                 time.sleep(2)
                 # 获取用户今日任务完成情况，返回还需要进行多少次浏览帖子、点赞、社区签到、游戏签到、回复他人帖子次数的操作
                 read, like, share, bbs_sign = get_kurobbs_taskprocess()
