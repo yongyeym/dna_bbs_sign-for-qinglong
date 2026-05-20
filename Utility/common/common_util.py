@@ -9,15 +9,20 @@ from pathlib import Path
 from typing import Dict, List, Union, Optional, NoReturn
 from Utility import notify
 
-# 配置文件路径
+# 通用配置的默认值
+USE_LOCAL_COOKIE = 0
+URL_TIMEOUT = 15
+URL_RETRY_TIMES = 5
+URL_RETRY_INTERVAL = 5
+# Config/config.ini文件路径
 CONFIG_DIR = Path(__file__).parent.parent.parent / "Config"
 CONFIG_PATH = CONFIG_DIR / "config.ini"
-# 配置文件不存在时自动创建使用的默认值
+# Config/config.ini文件不存在时自动创建使用的默认值，按section分别存放在多个字典中
 DEFAULT_CONFIG = {
-    "use_local_cookie": "0",
-    "url_timeout": "15",
-    "url_retry_times": "5",
-    "url_retry_interval": "5",
+    "use_local_cookie": USE_LOCAL_COOKIE,
+    "url_timeout": URL_TIMEOUT,
+    "url_retry_times": URL_RETRY_TIMES,
+    "url_retry_interval": URL_RETRY_INTERVAL,
 }
 COOKIE_CONFIG = {
     "kurobbs": "",
@@ -25,12 +30,8 @@ COOKIE_CONFIG = {
     "nga_cookie": "",
     "nga_uid": "",
     "nga_client_checksum": "",
-    "tajiduo": "",
+    "tajiduo_refresh_token": "",
 }
-USE_LOCAL_COOKIE = 0
-URL_TIMEOUT = 15
-URL_RETRY_TIMES = 5
-URL_RETRY_INTERVAL = 5
 
 def get_os_env(*args: str) -> tuple[str | None, ...]:
     """
@@ -42,6 +43,14 @@ def get_os_env(*args: str) -> tuple[str | None, ...]:
         value.strip() if value is not None else None
         for value in (os.getenv(str(arg)) for arg in args)
     )
+
+def set_os_env(key: str, value: str):
+    """
+    设置对应的环境变量值
+    :param key：要更新的环境变量的Key
+    :param value：要更新的环境变量的值
+    """
+    os.putenv(key, value)
 
 def get_config_env(*args: str, section: str = "DEFAULT") -> tuple[str | None, ...]:
     """
@@ -87,7 +96,7 @@ def write_config_env(key: str, value: str = "", section: str = "DEFAULT") -> boo
     """
     写入配置文件Config/config.ini中的变量值
     :param key: 需要写入配置文件的Key键名
-    :param value: 需要写入配置文件的key对应的值，默认为空字符串（None）
+    :param value: 需要写入配置文件的key对应的值，默认为空字符串（空值）
     :param section: 配置文件的分组，默认为DEFAULT
     :return: 是否成功写入
     """
