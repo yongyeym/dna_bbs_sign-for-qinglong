@@ -88,6 +88,9 @@ task yongyeym_AutoSign_QingLong_main/kurobbs_sign.py
 
 
 2026/05/21：
+* 更新帖子被删除时API返回的错误码，使其能正常进入帖子被删除重新获取一个帖子的流程
+
+2026/05/21：
 * 原API请求头更新导致无法使用，会返回Token过期，因此进行了更新。
 * 请求头参数有大量修改，可能会有各种问题发生，还需要长期进行测试确认。
 
@@ -102,6 +105,7 @@ task yongyeym_AutoSign_QingLong_main/kurobbs_sign.py
 ---
 <details>
   <summary>【异环·塔吉多】暂留</summary>
+
 ```
 task yongyeym_AutoSign_QingLong_main/tajiduo_sign.py
 ```
@@ -121,7 +125,7 @@ task yongyeym_AutoSign_QingLong_main/tajiduo_sign.py
 
 ---
 #### 二重螺旋&皎皎角社区 国服 每日任务与签到
-#### 已放弃，不再更新！
+#### 已放弃，不再更新
 <details>
   <summary>【点击这里查看详细内容】</summary>
 

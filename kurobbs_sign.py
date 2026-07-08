@@ -43,33 +43,6 @@ def get_acw_tc() -> str:
 # 目前已经不需要这个值了，原实现方法做保留
 #ACW_TC = get_acw_tc()
 
-def old_get_kurobbs_userid() -> tuple[str, str]:
-    """
-    API：gamer/role/default
-    ※注意：此API已不再使用，更换了新API，但目前此API仍然可以正常返回数据，仅作保留
-    获取库街区社区账号默认绑定角色的UID、游戏所在服务器serverID，用于执行签到等操作：
-    也有API user/mineV2，但只能查询库街区账号信息，无游戏角色信息
-    :return 返回游戏角色roleId、游戏服务器serverID
-    """
-    url = "https://api.kurobbs.com/gamer/role/default"
-    data = {
-        'queryUserId': USER_ID  # 库街区账号UID
-    }
-    response = get_response(url, data, 2)
-    if response["code"] == 200:
-        response_data = response["data"]["defaultRoleList"]  # 获取包含账号所有游戏默认角色的信息数组
-        for i in range(len(response_data)):
-            if response_data[i]['gameId'] == 3:
-                response_data = response_data[i]
-                break  # 只获取鸣潮游戏的信息，找到后中断循环
-        return  response_data["roleId"],response_data["serverId"]
-    elif response["code"] == 220:
-        raise SPException("Token失效", "Token失效，请更新环境变量kurobbs的值！")
-    elif response["code"] == 500:
-        raise SPException("获取账号ID失败", f"获取账号ID失败！请求被拒绝，请重新尝试或检查日志！错误信息：{response['msg']}")
-    else:
-        raise SPException("获取账号ID失败",f"获取账号ID失败！请求出现异常或被拒绝！Code {response['code']} - {response['msg']}")
-
 def get_kurobbs_userid() -> tuple[str, str]:
     """
     API：user/role/findUserDefaultRole
@@ -78,6 +51,7 @@ def get_kurobbs_userid() -> tuple[str, str]:
     也有API user/mineV2，但只能查询库街区账号信息，无游戏角色信息
     :return 返回游戏角色roleId、游戏服务器serverID
     """
+    #url = "https://api.kurobbs.com/gamer/role/default"  # 旧的API，目前已不再使用，但目前此API仍然可以正常返回数据，仅作保留
     url = "https://api.kurobbs.com/user/role/findUserDefaultRole"
     data = {
         'queryUserId': USER_ID  # 库街区账号UID
@@ -177,7 +151,7 @@ def get_post_detail(postId: str) -> bool:
         return False
     elif response["code"] == 220:
         raise SPException("Token失效", "Token失效，请更新环境变量kurobbs的值！")
-    elif response["code"] == 501:
+    elif response["code"] == 522:
         return True  # 这篇帖子被删除，返回False令程序从获取新的帖子ID步骤从新开始执行
     elif response["code"] == 500:
         raise SPException("浏览帖子任务失败", f"浏览帖子任务失败！请求被拒绝，请重新尝试或检查日志！错误信息：{response['msg']}")
@@ -211,7 +185,7 @@ def do_like(postId: str,toUserId: str) -> bool:
         return False
     elif response["code"] == 220:
         raise SPException("Token失效", "Token失效，请更新环境变量kurobbs的值！")
-    elif response["code"] == 501:
+    elif response["code"] == 522:
         return True  # 这篇帖子被删除，返回False令程序从获取新的帖子ID步骤从新开始执行
     elif response["code"] == 500:
         raise SPException("社区点赞任务失败", f"社区点赞任务失败！请求被拒绝，请重新尝试或检查日志！错误信息：{response['msg']}")
@@ -244,7 +218,7 @@ def do_unlike(postId: str,toUserId: str) -> bool:
         return False
     elif response["code"] == 220:
         raise SPException("Token失效", "Token失效，请更新环境变量kurobbs的值！")
-    elif response["code"] == 501:
+    elif response["code"] == 522:
         return True  # 这篇帖子被删除，返回False令程序从获取新的帖子ID步骤从新开始执行
     elif response["code"] == 500:
         raise SPException("社区点赞任务失败", f"社区点赞任务失败！请求被拒绝，请重新尝试或检查日志！错误信息：{response['msg']}")
@@ -268,7 +242,7 @@ def do_share(postId: str) -> bool:
         return False
     elif response["code"] == 220:
         raise SPException("Token失效", "Token失效，请更新环境变量kurobbs的值！")
-    elif response["code"] == 501:
+    elif response["code"] == 522:
         return True  # 这篇帖子被删除，返回False令程序从获取新的帖子ID步骤从新开始执行
     elif response["code"] == 500:
         raise SPException("社区分享任务失败", f"社区分享任务失败！请求被拒绝，请重新尝试或检查日志！错误信息：{response['msg']}")
