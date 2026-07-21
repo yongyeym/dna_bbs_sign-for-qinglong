@@ -13,8 +13,8 @@ from Utility.common.common_util import SPException
 
 # 获取一个随机生成的UUID4，在本次运行期间使用，用于给请求头的devCode赋值
 DEV_CODE = util.get_uuid(4, True, False)
-# 获取一个随机生成的UUID4，在本次运行期间使用，用于给请求头的distinct_id赋值，值的后面需要加上指定后缀，且与devCode的UUID4不同
-DISTINCT_ID = util.get_uuid(4, True, False) + "_3"
+# 获取一个随机生成的UUID4，在本次运行期间使用，用于给请求头的distinct_id赋值，值的后面需要加上随机数字后缀（目前此后缀值不会校验，不影响），且与devCode的UUID4不同
+DISTINCT_ID = util.get_uuid(4, True, False) + "_9"
 # 从环境变量或本地ini文件获取Cookie和UID
 ACCOUNT, USER_ID = util.get_config_env("kurobbs", "kuro_uid", section="COOKIE") if util.USE_LOCAL_COOKIE else util.get_os_env("kurobbs", "kuro_uid")
 # 请求头通用部分
@@ -27,6 +27,10 @@ HEADERS_COMMON = {
     'Connection': "keep-alive",
     'token': ACCOUNT
 }
+HEADERS_AGENT1 = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko)  KuroGameBox/3.1.4"
+HEADERS_AGENT2 = "KuroGameBox/20260706191836 CFNetwork/3860.600.12 Darwin/25.5.0"
+HEADERS_VERSION = "3.1.4"
+HEADERS_RANDOM_IP = "119.161.168.10"
 
 def get_acw_tc() -> str:
     """
@@ -377,20 +381,20 @@ def get_response(url: str, data: dict[str, str], headers_type: int) -> any:
     """
     headers1 = {
         **HEADERS_COMMON,
-        'User-Agent': "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko)  KuroGameBox/3.0.3",
+        'User-Agent': HEADERS_AGENT1,
         'Accept': "application/json, text/plain, */*",
         'Origin': "https://web-static.kurobbs.com",
         'Sec-Fetch-Site': "same-site",
         'Sec-Fetch-Mode': "cors",
         'Sec-Fetch-Dest': "empty",
         'Priority': "u=3, i",
-        'devCode': "111.16.160.144, Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko)  KuroGameBox/3.0.3",
+        'devCode': f"{HEADERS_RANDOM_IP}, {HEADERS_AGENT1}",
     }
     headers2 = {
         **HEADERS_COMMON,
-        'User-Agent': "KuroGameBox/20260513195311 CFNetwork/3860.600.12 Darwin/25.5.0",
+        'User-Agent': HEADERS_AGENT2,
         'channelId': "1",
-        'version': "3.0.3",
+        'version': HEADERS_VERSION,
         'distinct_id': DISTINCT_ID,
         'channel': "appstore",
         'Accept': "*/*",
@@ -398,7 +402,7 @@ def get_response(url: str, data: dict[str, str], headers_type: int) -> any:
         'ip': "192.168.1.2",
         'lang': "zh-Hans",
         'model': "iPhone15,4",
-        'osVersion': "26.5",
+        'osVersion': "26.5.2",
     }
     last_exception = None
     for i in range(util.URL_RETRY_TIMES):
@@ -410,6 +414,7 @@ def get_response(url: str, data: dict[str, str], headers_type: int) -> any:
             else:
                 response = requests.post(url, data=data, headers=headers2, timeout=util.URL_TIMEOUT)  # 默认使用第二种headers
             response.raise_for_status()  # 如果响应状态码不是200，主动抛出异常进行重试访问
+            #util.send_log_debug(f"URL访问成功：{url}，response为 {response.json()}")
             return response.json()
         except requests.RequestException as e:
             last_exception = e
