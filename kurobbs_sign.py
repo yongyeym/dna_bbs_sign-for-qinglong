@@ -418,7 +418,7 @@ def get_response(url: str, data: dict[str, str], headers_type: int) -> any:
             return response.json()
         except requests.RequestException as e:
             last_exception = e
-            util.send_log(f"URL访问失败（第{i + 1}次），{util.URL_RETRY_INTERVAL}秒后重试……", "warning")
+            util.send_log(f"URL访问失败（第{i + 1}次），HTTP Code {e.response.status_code}，{util.URL_RETRY_INTERVAL}秒后重试……", "warning")
             if i < util.URL_RETRY_TIMES:  # 失败时，等待指定秒后重试请求
                 time.sleep(util.URL_RETRY_INTERVAL)
     raise last_exception  # 重试多次都失败时抛出最后一次失败时的异常，在主程序部分捕获，用于返回API访问失败导致程序运行失败的提示

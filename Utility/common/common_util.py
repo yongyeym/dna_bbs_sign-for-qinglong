@@ -30,7 +30,6 @@ COOKIE_CONFIG = {
     "nga_cookie": "",
     "nga_uid": "",
     "nga_client_checksum": "",
-    "tajiduo_refresh_token": "",
 }
 
 def get_os_env(*args: str) -> tuple[str | None, ...]:
