@@ -75,8 +75,12 @@ task yongyeym_AutoSign_QingLong_main/nga_sign.py
 #### 更新日志：
 
 
+2026/9/2：
+* 修改青龙自动添加任务功能的注释区域代码，青龙新版本cron表达式不再支持解析?符号，修改了cron表达式，未修改执行时间，仍为00：03分执行。
+* 使用带?的原cron表达式会导致无法自动执行任务且无任何提示，注意手动修改。
+
 2025/12/12：
-* 初始版本发布，长期测试稳定运行
+* 初始版本发布，长期测试稳定运行**
 ---
 ```
 task yongyeym_AutoSign_QingLong_main/kurobbs_sign.py
@@ -95,6 +99,10 @@ task yongyeym_AutoSign_QingLong_main/kurobbs_sign.py
 
 #### 更新日志：
 
+
+2026/9/2：
+* 修改青龙自动添加任务功能的注释区域代码，青龙新版本cron表达式不再支持解析?符号，修改了cron表达式，未修改执行时间，仍为00：03分执行。
+* 使用带?的原cron表达式会导致无法自动执行任务且无任何提示，注意手动修改。
 
 2026/07/21：
 * 更新Headers的部分参数。
@@ -147,6 +155,10 @@ task yongyeym_AutoSign_QingLong_main/old_files/tajiduo_sign.py
 #### 更新日志：
 
 
+2026/9/2：
+* 修改青龙自动添加任务功能的注释区域代码，青龙新版本cron表达式不再支持解析?符号，修改了cron表达式，未修改执行时间，仍为00：03分执行。
+* 使用带?的原cron表达式会导致无法自动执行任务且无任何提示，注意手动修改。
+
 2026/08/04：
 * 由于账号登录令牌、ds防重试参数等安全验证机制，个人无法实现核心部分代码，放弃继续实现。
 * 本人相关脚本账号登录部分使用了此仓库的相关实现代码：[Candy-QAQ/NTE-Auto-Sign](https://github.com/Candy-QAQ/NTE-Auto-Sign)和此项目作者B站发布的视频评论区一位大佬改版的[青龙用脚本](https://daijin.lanzouu.com/idyTx3rph5kd)。
@@ -178,6 +190,10 @@ task yongyeym_AutoSign_QingLong_main/old_files/dnabbs_sign.py
 2. 青龙面板添加环境变量：dnabbs，可从[皎皎角PC端网页](https://dnabbs.yingxiong.com/pc)获取账号cookie（ey开头）；
 
 #### 更新日志：
+
+2026/9/2：
+* 修改青龙自动添加任务功能的注释区域代码，青龙新版本cron表达式不再支持解析?符号，修改了cron表达式，未修改执行时间，仍为00：03分执行。
+* 使用带?的原cron表达式会导致无法自动执行任务且无任何提示，注意手动修改。
 
 2026/03/03:
 * 游戏退坑，不再更新此脚本，脚本移动到/old_files/dnabbs_sign.py

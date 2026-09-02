@@ -2,7 +2,7 @@
 任务名称
 name: NGA社区 每日签到
 定时规则
-cron: 0 3 0 * * ?
+cron: 3 0 * * *
 """
 import time
 import traceback
